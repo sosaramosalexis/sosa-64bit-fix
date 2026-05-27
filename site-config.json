@@ -1,0 +1,44 @@
+{
+  "siteName": "Sosa's 64bit Fix",
+  "metaDescription": "Expert computer repair services by Sosa's 64bit Fix. Fast, reliable, and affordable repairs for all your tech needs.",
+  "titleTag": "Sosa's 64bit Fix — Computer Repair",
+  "hero": {
+    "badge": "SINCE 2024",
+    "title": "Your PC.<br>Our <span class=\"highlight\">Expertise.</span>",
+    "subtitle": "Professional computer repair, upgrades, and diagnostics. Fast turnaround, fair prices, and work you can trust.",
+    "statRepairs": "500+",
+    "statHappy": "98%",
+    "statYears": "10+"
+  },
+  "services": {
+    "title": "Repair Services",
+    "subtitle": "From virus removal to hardware upgrades — I've got you covered"
+  },
+  "repairs": {
+    "title": "Recent Repairs",
+    "subtitle": "Real repairs I've done — see the process and results"
+  },
+  "reviews": {
+    "title": "What Clients Say",
+    "subtitle": "Real reviews from real customers"
+  },
+  "about": {
+    "title": "The Man Behind The Bench",
+    "paragraph1": "Welcome to <strong>Sosa's 64bit Fix</strong> — your trusted local computer repair shop. I'm Sosa, a certified technician with years of hands-on experience reviving dead PCs, upgrading aging laptops, and making technology work for you.",
+    "paragraph2": "I believe in transparent pricing, honest diagnostics, and treating every device like it's my own. Whether you spilled coffee on your laptop, got hit with ransomware, or just need a tune-up — I'll get you back up and running.",
+    "detail1": "Certified & insured",
+    "detail2": "Free diagnostics",
+    "detail3": "90-day warranty on repairs",
+    "image": "https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?w=600&q=80"
+  },
+  "contact": {
+    "title": "Let's Fix It",
+    "subtitle": "Have a broken device? Drop me a message and I'll get back to you ASAP.",
+    "address": "San Diego, CA",
+    "email": "sosa@64bitfix.com",
+    "hours": "Mon-Fri 9AM-7PM, Sat 10AM-4PM"
+  },
+  "footer": {
+    "tagline": "Fixing your tech, one bit at a time."
+  }
+}

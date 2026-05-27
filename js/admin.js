@@ -1,0 +1,832 @@
+const FALLBACK_HASH = 'b9bdfb380fbfe39c592804dee2ef71d3e949d10d34b8e3267729616d02108efd';
+
+let token = '';
+let owner = '';
+let repo = '';
+let allRepairs = [];
+let allDevices = [];
+let allReviews = [];
+let editingRepairId = null;
+let editingDeviceSerial = null;
+let storedHash = '';
+let totpVerified = false;
+let tempSecret = '';
+let tempRecoveryPlain = [];
+
+const viewLogin = document.getElementById('viewLogin');
+const viewDashboard = document.getElementById('viewDashboard');
+const viewRepairEditor = document.getElementById('viewRepairEditor');
+const viewDeviceEditor = document.getElementById('viewDeviceEditor');
+
+const loginForm = document.getElementById('loginForm');
+const loginError = document.getElementById('loginError');
+const loginStep2 = document.getElementById('loginStep2');
+const loginTotpStep = document.getElementById('loginTotpStep');
+const loginRecoveryStep = document.getElementById('loginRecoveryStep');
+const loginTotp = document.getElementById('loginTotp');
+const loginTotpBtn = document.getElementById('loginTotpBtn');
+const loginTotpError = document.getElementById('loginTotpError');
+const loginUseRecovery = document.getElementById('loginUseRecovery');
+const loginBackToTotp = document.getElementById('loginBackToTotp');
+const loginRecoveryCode = document.getElementById('loginRecoveryCode');
+const loginRecoveryBtn = document.getElementById('loginRecoveryBtn');
+const loginRecoveryError = document.getElementById('loginRecoveryError');
+
+const repairsBody = document.getElementById('repairsBody');
+const repairsTable = document.getElementById('repairsTable');
+const repairsEmpty = document.getElementById('repairsEmpty');
+const repairsLoading = document.getElementById('repairsLoading');
+const newRepairBtn = document.getElementById('newRepairBtn');
+const logoutBtn = document.getElementById('logoutBtn');
+
+const devicesBody = document.getElementById('devicesBody');
+const devicesTable = document.getElementById('devicesTable');
+const devicesEmpty = document.getElementById('devicesEmpty');
+const devicesLoading = document.getElementById('devicesLoading');
+const newDeviceBtn = document.getElementById('newDeviceBtn');
+
+const pendingReviews = document.getElementById('pendingReviews');
+const approvedReviews = document.getElementById('approvedReviews');
+const reviewsLoading = document.getElementById('reviewsLoading');
+const reviewsEmpty = document.getElementById('reviewsEmpty');
+
+const repairEditorBackBtn = document.getElementById('repairEditorBackBtn');
+const repairEditorForm = document.getElementById('repairEditorForm');
+const repairEditorTitle = document.getElementById('repairEditorTitle');
+const edSaveBtn = document.getElementById('edSaveBtn');
+const edMsg = document.getElementById('edMsg');
+const edTitle = document.getElementById('edTitle');
+const edSlug = document.getElementById('edSlug');
+const edDeviceType = document.getElementById('edDeviceType');
+const edDeviceModel = document.getElementById('edDeviceModel');
+const edIssue = document.getElementById('edIssue');
+const edStatus = document.getElementById('edStatus');
+const edDate = document.getElementById('edDate');
+const edImage = document.getElementById('edImage');
+const edExcerpt = document.getElementById('edExcerpt');
+const edProblem = document.getElementById('edProblem');
+const edProcess = document.getElementById('edProcess');
+const edParts = document.getElementById('edParts');
+const edReviewAuthor = document.getElementById('edReviewAuthor');
+const edReviewRating = document.getElementById('edReviewRating');
+const edReviewText = document.getElementById('edReviewText');
+
+const deviceEditorBackBtn = document.getElementById('deviceEditorBackBtn');
+const deviceEditorForm = document.getElementById('deviceEditorForm');
+const deviceEditorTitle = document.getElementById('deviceEditorTitle');
+const edDeviceSaveBtn = document.getElementById('edDeviceSaveBtn');
+const edDeviceMsg = document.getElementById('edDeviceMsg');
+const edDeviceCustomer = document.getElementById('edDeviceCustomer');
+const edDeviceSerial = document.getElementById('edDeviceSerial');
+const edDeviceType2 = document.getElementById('edDeviceType2');
+const edDeviceBrand = document.getElementById('edDeviceBrand');
+const edDeviceModel2 = document.getElementById('edDeviceModel2');
+const edDeviceYear = document.getElementById('edDeviceYear');
+const edDeviceSpecs = document.getElementById('edDeviceSpecs');
+
+const settingsForm = document.getElementById('settingsForm');
+const settingsMsg = document.getElementById('settingsMsg');
+const settingsSaveBtn = document.getElementById('settingsSaveBtn');
+
+const passwordForm = document.getElementById('passwordForm');
+const pwMsg = document.getElementById('pwMsg');
+const pwSaveBtn = document.getElementById('pwSaveBtn');
+
+const mfaStatusLabel = document.getElementById('mfaStatusLabel');
+const mfaEnableBtn = document.getElementById('mfaEnableBtn');
+const mfaSetup = document.getElementById('mfaSetup');
+const mfaQr = document.getElementById('mfaQr');
+const mfaSecretText = document.getElementById('mfaSecretText');
+const mfaVerifyCode = document.getElementById('mfaVerifyCode');
+const mfaVerifyBtn = document.getElementById('mfaVerifyBtn');
+const mfaCancelBtn = document.getElementById('mfaCancelBtn');
+const mfaSetupMsg = document.getElementById('mfaSetupMsg');
+const mfaRecoveryWrap = document.getElementById('mfaRecoveryWrap');
+const mfaRecoveryList = document.getElementById('mfaRecoveryList');
+const mfaRecoveryDoneBtn = document.getElementById('mfaRecoveryDoneBtn');
+const mfaControls = document.getElementById('mfaControls');
+const mfaShowRecoveryBtn = document.getElementById('mfaShowRecoveryBtn');
+const mfaRegenBtn = document.getElementById('mfaRegenBtn');
+const mfaDisableBtn = document.getElementById('mfaDisableBtn');
+const mfaControlMsg = document.getElementById('mfaControlMsg');
+
+async function sha256(str) {
+  const buf = new TextEncoder().encode(str);
+  const hash = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function ghFetch(path, method = 'GET', body = null) {
+  const opts = { method, headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/${path}`, opts);
+  if (res.status === 404) return null;
+  if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.message || `API error: ${res.status}`); }
+  return res.json();
+}
+
+async function getFileSha(path) { const data = await ghFetch(`contents/${path}`); return data ? data.sha : null; }
+
+async function readFileContent(path) {
+  const data = await ghFetch(`contents/${path}`);
+  if (!data) return null;
+  return { content: decodeURIComponent(escape(atob(data.content.replace(/\n/g, '')))), sha: data.sha };
+}
+
+async function writeFile(path, content, sha = null) {
+  const body = { message: `Update ${path}`, content: btoa(unescape(encodeURIComponent(content))) };
+  if (sha) body.sha = sha;
+  return ghFetch(`contents/${path}`, 'PUT', body);
+}
+
+async function deleteFile(path, sha) { return ghFetch(`contents/${path}`, 'DELETE', { message: `Delete ${path}`, sha }); }
+
+const BASE32_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+function base32Encode(bytes) {
+  let bits = 0, bitCount = 0, result = '';
+  for (const b of bytes) { bits = (bits << 8) | b; bitCount += 8; while (bitCount >= 5) { result += BASE32_CHARS[(bits >> (bitCount - 5)) & 0x1f]; bitCount -= 5; } }
+  if (bitCount > 0) result += BASE32_CHARS[(bits << (5 - bitCount)) & 0x1f];
+  return result;
+}
+function base32Decode(str) {
+  const bytes = []; let bits = 0, bitCount = 0;
+  for (const ch of str.toUpperCase()) { const idx = BASE32_CHARS.indexOf(ch); if (idx === -1) continue; bits = (bits << 5) | idx; bitCount += 5; if (bitCount >= 8) { bytes.push((bits >> (bitCount - 8)) & 0xff); bitCount -= 8; } }
+  return new Uint8Array(bytes);
+}
+function generateTOTPSecret() { return base32Encode(crypto.getRandomValues(new Uint8Array(20))); }
+async function generateTOTP(secret, timestamp = Date.now()) {
+  const counter = Math.floor(timestamp / 30000);
+  const buf = new ArrayBuffer(8);
+  new DataView(buf).setBigUint64(0, BigInt(counter), false);
+  const key = await crypto.subtle.importKey('raw', base32Decode(secret), { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']);
+  const hmac = new Uint8Array(await crypto.subtle.sign('HMAC', key, buf));
+  const offset = hmac[hmac.length - 1] & 0x0f;
+  const code = ((hmac[offset] & 0x7f) << 24) | ((hmac[offset + 1] & 0xff) << 16) | ((hmac[offset + 2] & 0xff) << 8) | (hmac[offset + 3] & 0xff);
+  return String(code % 1000000).padStart(6, '0');
+}
+async function verifyTOTP(secret, code) {
+  const now = Date.now();
+  for (let i = -1; i <= 1; i++) { if (await generateTOTP(secret, now + i * 30000) === code) return true; }
+  return false;
+}
+function generateTOTPUri(secret, label) { return `otpauth://totp/${encodeURIComponent(label)}?secret=${secret}&issuer=${encodeURIComponent(label)}`; }
+function generatePlainCodes(count = 8) {
+  const codes = [];
+  for (let i = 0; i < count; i++) {
+    const bytes = crypto.getRandomValues(new Uint8Array(8));
+    const code = Array.from(bytes).map(b => b.toString(36).padStart(2, '0')).join('').slice(0, 10);
+    codes.push(code.slice(0, 4) + '-' + code.slice(4, 8) + '-' + code.slice(8));
+  }
+  return codes;
+}
+async function hashCodes(plainCodes) { const hashes = []; for (const code of plainCodes) hashes.push(await sha256(code)); return hashes; }
+
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  loginError.textContent = '';
+  token = document.getElementById('loginToken').value.trim();
+  owner = document.getElementById('loginOwner').value.trim();
+  repo = document.getElementById('loginRepo').value.trim();
+  if (!token || !owner || !repo) { loginError.textContent = 'Please fill in all fields.'; return; }
+  loginError.textContent = 'Verifying...';
+  totpVerified = false;
+  try {
+    const data = await readFileContent('admin-config.json');
+    const cfg = data ? JSON.parse(data.content) : {};
+    storedHash = cfg.passwordHash || FALLBACK_HASH;
+    const pw = document.getElementById('loginPassword').value;
+    if ((await sha256(pw)) !== storedHash) { loginError.textContent = 'Incorrect password.'; return; }
+    if (cfg.totpEnabled && cfg.totpSecret) {
+      window._totpSecret = cfg.totpSecret;
+      window._recoveryHashes = cfg.recoveryCodeHashes || [];
+      loginForm.style.display = 'none';
+      loginStep2.style.display = '';
+      loginTotpStep.style.display = '';
+      loginRecoveryStep.style.display = 'none';
+      loginTotpError.textContent = '';
+      loginRecoveryError.textContent = '';
+      loginTotp.value = '';
+      loginTotp.focus();
+    } else {
+      totpVerified = true;
+      localStorage.setItem('adminToken', token);
+      localStorage.setItem('adminOwner', owner);
+      localStorage.setItem('adminRepo', repo);
+      showDashboard();
+    }
+  } catch (err) { loginError.textContent = 'Connection error: ' + err.message; }
+});
+
+loginTotpBtn.addEventListener('click', async () => {
+  const code = loginTotp.value.trim();
+  if (!/^\d{6}$/.test(code)) { loginTotpError.textContent = 'Enter a valid 6-digit code.'; return; }
+  loginTotpError.textContent = 'Verifying...';
+  try {
+    if (await verifyTOTP(window._totpSecret, code)) {
+      totpVerified = true;
+      localStorage.setItem('adminToken', token);
+      localStorage.setItem('adminOwner', owner);
+      localStorage.setItem('adminRepo', repo);
+      showDashboard();
+    } else { loginTotpError.textContent = 'Invalid code. Try again.'; }
+  } catch { loginTotpError.textContent = 'Verification failed.'; }
+});
+loginTotp.addEventListener('keydown', (e) => { if (e.key === 'Enter') loginTotpBtn.click(); });
+loginUseRecovery.addEventListener('click', (e) => { e.preventDefault(); loginTotpStep.style.display = 'none'; loginRecoveryStep.style.display = ''; loginRecoveryCode.focus(); });
+loginBackToTotp.addEventListener('click', (e) => { e.preventDefault(); loginRecoveryStep.style.display = 'none'; loginTotpStep.style.display = ''; loginTotp.focus(); });
+
+loginRecoveryBtn.addEventListener('click', async () => {
+  const code = loginRecoveryCode.value.trim();
+  if (!code) { loginRecoveryError.textContent = 'Enter a recovery code.'; return; }
+  loginRecoveryError.textContent = 'Verifying...';
+  const hash = await sha256(code);
+  const idx = window._recoveryHashes.indexOf(hash);
+  if (idx === -1) { loginRecoveryError.textContent = 'Invalid recovery code.'; return; }
+  window._recoveryHashes.splice(idx, 1);
+  try {
+    const data = await readFileContent('admin-config.json');
+    const cfg = data ? JSON.parse(data.content) : {};
+    cfg.recoveryCodeHashes = window._recoveryHashes;
+    await writeFile('admin-config.json', JSON.stringify(cfg, null, 2), data ? data.sha : null);
+    totpVerified = true;
+    localStorage.setItem('adminToken', token);
+    localStorage.setItem('adminOwner', owner);
+    localStorage.setItem('adminRepo', repo);
+    showDashboard();
+  } catch (err) { loginRecoveryError.textContent = 'Failed to consume recovery code: ' + err.message; }
+});
+loginRecoveryCode.addEventListener('keydown', (e) => { if (e.key === 'Enter') loginRecoveryBtn.click(); });
+
+function showView(view) {
+  [viewLogin, viewDashboard, viewRepairEditor, viewDeviceEditor].forEach(v => v.style.display = 'none');
+  view.style.display = '';
+}
+
+function showDashboard() {
+  loginForm.style.display = '';
+  loginStep2.style.display = 'none';
+  showView(viewDashboard);
+  switchTab('repairs');
+}
+
+function showRepairEditor(repair = null) {
+  showView(viewRepairEditor);
+  editingRepairId = repair ? repair.id : null;
+  repairEditorTitle.textContent = repair ? 'Edit Repair' : 'New Repair';
+  edSaveBtn.textContent = repair ? 'Update Repair' : 'Publish Repair';
+  edMsg.textContent = '';
+  edMsg.className = 'form-msg';
+  if (repair) {
+    edTitle.value = repair.title; edSlug.value = repair.id;
+    edDeviceType.value = repair.deviceType; edDeviceModel.value = repair.deviceModel;
+    edIssue.value = repair.issue; edStatus.value = repair.status || 'Completed';
+    edDate.value = repair.date; edImage.value = repair.image || '';
+    edExcerpt.value = repair.excerpt; edProblem.value = repair.problem || '';
+    edProcess.value = repair.process || ''; edParts.value = repair.partsUsed || '';
+    edReviewAuthor.value = repair.reviewAuthor || '';
+    edReviewRating.value = repair.reviewRating || '';
+    edReviewText.value = repair.reviewText || '';
+  } else {
+    repairEditorForm.reset();
+    edSlug.value = '';
+    edDate.value = new Date().toISOString().slice(0, 10);
+    edStatus.value = 'Completed';
+  }
+}
+
+function showDeviceEditor(device = null) {
+  showView(viewDeviceEditor);
+  editingDeviceSerial = device ? device.serial : null;
+  deviceEditorTitle.textContent = device ? 'Edit Device' : 'Register Device';
+  edDeviceSaveBtn.textContent = device ? 'Update Device' : 'Register Device';
+  edDeviceMsg.textContent = '';
+  edDeviceMsg.className = 'form-msg';
+  if (device) {
+    edDeviceCustomer.value = device.customer; edDeviceSerial.value = device.serial;
+    edDeviceType2.value = device.deviceType; edDeviceBrand.value = device.brand;
+    edDeviceModel2.value = device.model; edDeviceYear.value = device.year || '';
+    edDeviceSpecs.value = device.specs || '';
+  } else {
+    deviceEditorForm.reset();
+  }
+}
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+});
+
+function switchTab(tabId) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tabId));
+  document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+  const content = document.getElementById(`tab${tabId.charAt(0).toUpperCase() + tabId.slice(1)}`);
+  if (content) content.style.display = '';
+  if (tabId === 'repairs') loadRepairsDashboard();
+  if (tabId === 'devices') loadDevicesDashboard();
+  if (tabId === 'reviews') loadReviewsDashboard();
+  if (tabId === 'settings') loadSettings();
+  if (tabId === 'account') loadMfaStatus();
+}
+
+edTitle.addEventListener('input', () => {
+  if (editingRepairId) return;
+  edSlug.value = edTitle.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+});
+
+async function loadRepairsDashboard() {
+  repairsLoading.style.display = '';
+  repairsTable.style.display = 'none';
+  repairsEmpty.style.display = 'none';
+  try { const data = await readFileContent('repairs/repairs.json'); allRepairs = data ? JSON.parse(data.content) : []; } catch { allRepairs = []; }
+  renderRepairsDashboard();
+}
+
+function renderRepairsDashboard() {
+  repairsLoading.style.display = 'none';
+  if (!allRepairs.length) { repairsEmpty.style.display = ''; repairsTable.style.display = 'none'; return; }
+  repairsTable.style.display = ''; repairsEmpty.style.display = 'none';
+  repairsBody.innerHTML = allRepairs.map(r => {
+    const statusClass = r.status ? r.status.toLowerCase().replace(/\s+/g, '-') : 'completed';
+    return `<tr data-id="${r.id}">
+      <td class="cell-title">${escHtml(r.title)}</td>
+      <td>${escHtml(r.deviceModel)}</td>
+      <td>${r.date}</td>
+      <td><span class="status-badge ${statusClass}">${r.status}</span></td>
+      <td class="actions">
+        <button class="btn btn-secondary btn-sm act-edit">Edit</button>
+        <button class="btn btn-danger btn-sm act-delete">Delete</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+repairsBody.addEventListener('click', (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  const row = btn.closest('tr[data-id]');
+  if (!row) return;
+  const id = row.dataset.id;
+  if (btn.classList.contains('act-edit')) editRepair(id);
+  else if (btn.classList.contains('act-delete')) deleteRepair(id);
+});
+
+function escHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+newRepairBtn.addEventListener('click', () => showRepairEditor(null));
+repairEditorBackBtn.addEventListener('click', () => { showView(viewDashboard); switchTab('repairs'); });
+document.getElementById('edCancelBtn').addEventListener('click', () => { showView(viewDashboard); switchTab('repairs'); });
+
+async function editRepair(id) {
+  const meta = allRepairs.find(r => r.id === id);
+  if (!meta) { alert('Repair not found.'); return; }
+  try {
+    const data = await readFileContent(`repairs/${id}.json`);
+    if (data) { const full = JSON.parse(data.content); showRepairEditor(full); }
+    else { showRepairEditor(meta); }
+  } catch { showRepairEditor(meta); }
+}
+
+async function deleteRepair(id) {
+  if (!confirm(`Delete repair "${id}"?`)) return;
+  try {
+    const sha = await getFileSha(`repairs/${id}.json`);
+    if (sha) await deleteFile(`repairs/${id}.json`, sha);
+    const updated = allRepairs.filter(r => r.id !== id);
+    const content = JSON.stringify(updated, null, 2);
+    const data = await readFileContent('repairs/repairs.json');
+    await writeFile('repairs/repairs.json', content, data ? data.sha : null);
+    allRepairs = updated; renderRepairsDashboard();
+  } catch (err) { alert('Delete failed: ' + err.message); }
+}
+
+logoutBtn.addEventListener('click', () => {
+  localStorage.removeItem('adminToken');
+  localStorage.removeItem('adminOwner');
+  localStorage.removeItem('adminRepo');
+  showView(viewLogin);
+});
+
+repairEditorForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  edMsg.textContent = 'Saving...'; edMsg.className = 'form-msg';
+  edSaveBtn.disabled = true;
+
+  const title = edTitle.value.trim(), slug = edSlug.value.trim();
+  const deviceType = edDeviceType.value.trim(), deviceModel = edDeviceModel.value.trim();
+  const issue = edIssue.value.trim(), status = edStatus.value;
+  const date = edDate.value, image = edImage.value.trim() || 'https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?w=600&q=80';
+  const excerpt = edExcerpt.value.trim(), problem = edProblem.value.trim();
+  const process = edProcess.value.trim(), partsUsed = edParts.value.trim();
+  const reviewAuthor = edReviewAuthor.value.trim(), reviewRating = edReviewRating.value;
+  const reviewText = edReviewText.value.trim();
+
+  if (!slug.match(/^[a-z0-9-]+$/)) {
+    edMsg.textContent = 'Slug must contain only lowercase letters, numbers, and hyphens.';
+    edMsg.className = 'form-msg error'; edSaveBtn.disabled = false; return;
+  }
+
+  const repair = { id: slug, title, deviceType, deviceModel, issue, status, date, image, excerpt, problem, process };
+  if (partsUsed) repair.partsUsed = partsUsed;
+  if (reviewAuthor) { repair.reviewAuthor = reviewAuthor; repair.reviewRating = reviewRating; repair.reviewText = reviewText; }
+
+  try {
+    const repairsData = await readFileContent('repairs/repairs.json');
+    let repairs = repairsData ? JSON.parse(repairsData.content) : [];
+    const idx = repairs.findIndex(r => r.id === slug);
+    if (editingRepairId && editingRepairId !== slug) {
+      const oldSha = await getFileSha(`repairs/${editingRepairId}.json`);
+      if (oldSha) await deleteFile(`repairs/${editingRepairId}.json`, oldSha);
+    }
+    const repairContent = JSON.stringify(repair, null, 2);
+    const repairSha = editingRepairId && editingRepairId === slug ? await getFileSha(`repairs/${slug}.json`) : null;
+    await writeFile(`repairs/${slug}.json`, repairContent, repairSha);
+    const meta = { id: slug, title, deviceType, deviceModel, issue, status, date, image, excerpt };
+    if (idx >= 0) repairs[idx] = meta; else repairs.push(meta);
+    await writeFile('repairs/repairs.json', JSON.stringify(repairs, null, 2), repairsData ? repairsData.sha : null);
+    edMsg.textContent = 'Repair saved! Redirecting...'; edMsg.className = 'form-msg success';
+    setTimeout(() => { showView(viewDashboard); switchTab('repairs'); }, 800);
+  } catch (err) {
+    edMsg.textContent = 'Error: ' + err.message; edMsg.className = 'form-msg error';
+    edSaveBtn.disabled = false;
+  }
+});
+
+const edImageFile = document.getElementById('edImageFile');
+const edImageUploadBtn = document.getElementById('edImageUploadBtn');
+edImageUploadBtn.addEventListener('click', () => edImageFile.click());
+edImageFile.addEventListener('change', async () => {
+  const file = edImageFile.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { alert('Image too large. Max 5MB.'); edImageFile.value = ''; return; }
+  const ext = file.name.split('.').pop();
+  const filename = `images/${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`;
+  edImageUploadBtn.textContent = 'Uploading...';
+  edImageUploadBtn.disabled = true;
+  try {
+    const reader = new FileReader();
+    const base64 = await new Promise((resolve, reject) => { reader.onload = () => resolve(reader.result.split(',')[1]); reader.onerror = reject; reader.readAsDataURL(file); });
+    const sha = await getFileSha(filename);
+    await ghFetch(`contents/${filename}`, 'PUT', { message: `Upload ${filename}`, content: base64, sha: sha || undefined });
+    edImage.value = `https://raw.githubusercontent.com/${owner}/${repo}/main/${filename}`;
+    edImageUploadBtn.textContent = 'Upload';
+    edImageUploadBtn.disabled = false;
+    edImageFile.value = '';
+  } catch (err) { alert('Upload failed: ' + err.message); edImageUploadBtn.textContent = 'Upload'; edImageUploadBtn.disabled = false; }
+});
+
+async function loadDevicesDashboard() {
+  devicesLoading.style.display = '';
+  devicesTable.style.display = 'none';
+  devicesEmpty.style.display = 'none';
+  try { const data = await readFileContent('devices/devices.json'); allDevices = data ? JSON.parse(data.content) : []; } catch { allDevices = []; }
+  renderDevicesDashboard();
+}
+
+function renderDevicesDashboard() {
+  devicesLoading.style.display = 'none';
+  if (!allDevices.length) { devicesEmpty.style.display = ''; devicesTable.style.display = 'none'; return; }
+  devicesTable.style.display = ''; devicesEmpty.style.display = 'none';
+  devicesBody.innerHTML = allDevices.map(d => `
+    <tr data-serial="${escHtml(d.serial)}">
+      <td><code style="font-family:var(--ff-mono);font-size:0.8rem;color:var(--clr-primary)">${escHtml(d.serial)}</code></td>
+      <td>${escHtml(d.customer)}</td>
+      <td class="cell-title">${escHtml(d.brand)} ${escHtml(d.model)}</td>
+      <td>${escHtml(d.deviceType)}</td>
+      <td>${d.dateAdded || '-'}</td>
+      <td class="actions">
+        <button class="btn btn-secondary btn-sm act-edit">Edit</button>
+        <button class="btn btn-danger btn-sm act-delete">Delete</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+devicesBody.addEventListener('click', (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  const row = btn.closest('tr[data-serial]');
+  if (!row) return;
+  const serial = row.dataset.serial;
+  if (btn.classList.contains('act-edit')) editDevice(serial);
+  else if (btn.classList.contains('act-delete')) deleteDevice(serial);
+});
+
+newDeviceBtn.addEventListener('click', () => showDeviceEditor(null));
+deviceEditorBackBtn.addEventListener('click', () => { showView(viewDashboard); switchTab('devices'); });
+document.getElementById('edDeviceCancelBtn').addEventListener('click', () => { showView(viewDashboard); switchTab('devices'); });
+
+async function editDevice(serial) {
+  const device = allDevices.find(d => d.serial === serial);
+  if (device) showDeviceEditor(device);
+  else alert('Device not found.');
+}
+
+async function deleteDevice(serial) {
+  if (!confirm(`Delete device with serial "${serial}"?`)) return;
+  try {
+    const updated = allDevices.filter(d => d.serial !== serial);
+    const content = JSON.stringify(updated, null, 2);
+    const data = await readFileContent('devices/devices.json');
+    await writeFile('devices/devices.json', content, data ? data.sha : null);
+    allDevices = updated; renderDevicesDashboard();
+  } catch (err) { alert('Delete failed: ' + err.message); }
+}
+
+deviceEditorForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  edDeviceMsg.textContent = 'Saving...'; edDeviceMsg.className = 'form-msg';
+  edDeviceSaveBtn.disabled = true;
+
+  const customer = edDeviceCustomer.value.trim();
+  const serial = edDeviceSerial.value.trim();
+  const deviceType = edDeviceType2.value.trim();
+  const brand = edDeviceBrand.value.trim();
+  const model = edDeviceModel2.value.trim();
+  const year = edDeviceYear.value.trim();
+  const specs = edDeviceSpecs.value.trim();
+
+  if (!serial) {
+    edDeviceMsg.textContent = 'Serial number is required.'; edDeviceMsg.className = 'form-msg error';
+    edDeviceSaveBtn.disabled = false; return;
+  }
+
+  if (!editingDeviceSerial && allDevices.find(d => d.serial === serial)) {
+    edDeviceMsg.textContent = 'A device with this serial number already exists.'; edDeviceMsg.className = 'form-msg error';
+    edDeviceSaveBtn.disabled = false; return;
+  }
+
+  const device = { serial, customer, deviceType, brand, model, year, specs, dateAdded: editingDeviceSerial ? (allDevices.find(d => d.serial === editingDeviceSerial)?.dateAdded || new Date().toISOString().slice(0, 10)) : new Date().toISOString().slice(0, 10) };
+
+  try {
+    const devicesData = await readFileContent('devices/devices.json');
+    let devices = devicesData ? JSON.parse(devicesData.content) : [];
+    const idx = devices.findIndex(d => d.serial === serial);
+    if (editingDeviceSerial && editingDeviceSerial !== serial) {
+      const oldIdx = devices.findIndex(d => d.serial === editingDeviceSerial);
+      if (oldIdx >= 0) devices.splice(oldIdx, 1);
+    }
+    if (idx >= 0) devices[idx] = device; else devices.push(device);
+    await writeFile('devices/devices.json', JSON.stringify(devices, null, 2), devicesData ? devicesData.sha : null);
+    edDeviceMsg.textContent = 'Device saved! Redirecting...'; edDeviceMsg.className = 'form-msg success';
+    setTimeout(() => { showView(viewDashboard); switchTab('devices'); }, 800);
+  } catch (err) {
+    edDeviceMsg.textContent = 'Error: ' + err.message; edDeviceMsg.className = 'form-msg error';
+    edDeviceSaveBtn.disabled = false;
+  }
+});
+
+async function loadReviewsDashboard() {
+  reviewsLoading.style.display = '';
+  pendingReviews.innerHTML = '';
+  approvedReviews.innerHTML = '';
+  reviewsEmpty.style.display = 'none';
+  try { const data = await readFileContent('reviews/reviews.json'); allReviews = data ? JSON.parse(data.content) : []; } catch { allReviews = []; }
+  renderReviewsDashboard();
+}
+
+function renderReviewsDashboard() {
+  reviewsLoading.style.display = 'none';
+  const pending = allReviews.filter(r => !r.approved);
+  const approved = allReviews.filter(r => r.approved);
+
+  if (!allReviews.length) { reviewsEmpty.style.display = ''; pendingReviews.innerHTML = ''; approvedReviews.innerHTML = ''; return; }
+
+  if (!pending.length) {
+    pendingReviews.innerHTML = '<p style="color:var(--clr-text-light);font-size:0.85rem">No pending reviews.</p>';
+  } else {
+    pendingReviews.innerHTML = pending.map(r => {
+      const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+      return `<div class="pending-card">
+        <div class="review-stars">${stars}</div>
+        <p class="review-text">"${escHtml(r.text)}"</p>
+        <p class="review-meta">— ${escHtml(r.name)} · <span class="serial">${escHtml(r.serial)}</span> · ${r.date}</p>
+        <div class="actions">
+          <button class="btn btn-primary btn-sm act-approve" data-id="${r.id}">Approve</button>
+          <button class="btn btn-danger btn-sm act-reject" data-id="${r.id}">Reject</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  if (!approved.length) {
+    approvedReviews.innerHTML = '<p style="color:var(--clr-text-light);font-size:0.85rem">No approved reviews.</p>';
+  } else {
+    approvedReviews.innerHTML = approved.map(r => {
+      const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+      return `<div class="approved-card">
+        <div class="review-stars">${stars}</div>
+        <p class="review-text">"${escHtml(r.text)}"</p>
+        <p class="review-meta">— ${escHtml(r.name)} · ${r.date}</p>
+        <div class="actions">
+          <button class="btn btn-secondary btn-sm act-reject" data-id="${r.id}">Remove</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+}
+
+document.addEventListener('click', (e) => {
+  const actApprove = e.target.closest('.act-approve');
+  const actReject = e.target.closest('.act-reject');
+  if (actApprove) approveReview(actApprove.dataset.id);
+  else if (actReject) rejectReview(actReject.dataset.id);
+});
+
+async function approveReview(id) {
+  const review = allReviews.find(r => r.id === id);
+  if (!review) return;
+  review.approved = true;
+  try {
+    const data = await readFileContent('reviews/reviews.json');
+    await writeFile('reviews/reviews.json', JSON.stringify(allReviews, null, 2), data ? data.sha : null);
+    renderReviewsDashboard();
+  } catch (err) { alert('Failed to approve: ' + err.message); }
+}
+
+async function rejectReview(id) {
+  if (!confirm('Remove this review?')) return;
+  allReviews = allReviews.filter(r => r.id !== id);
+  try {
+    const data = await readFileContent('reviews/reviews.json');
+    await writeFile('reviews/reviews.json', JSON.stringify(allReviews, null, 2), data ? data.sha : null);
+    renderReviewsDashboard();
+  } catch (err) { alert('Failed to remove: ' + err.message); }
+}
+
+const SETTINGS_PATH = 'site-config.json';
+const SETTINGS_FIELDS = [
+  'siteName', 'metaDescription',
+  'hero-badge', 'hero-title', 'hero-subtitle', 'hero-statRepairs', 'hero-statHappy', 'hero-statYears',
+  'services-title', 'services-subtitle',
+  'repairs-title', 'repairs-subtitle',
+  'reviews-title', 'reviews-subtitle',
+  'about-title', 'about-paragraph1', 'about-paragraph2', 'about-detail1', 'about-detail2', 'about-detail3', 'about-image',
+  'contact-title', 'contact-subtitle', 'contact-address', 'contact-email', 'contact-hours',
+  'footer-tagline'
+];
+
+async function loadSettings() {
+  settingsMsg.textContent = 'Loading...'; settingsMsg.className = 'form-msg';
+  try {
+    const data = await readFileContent(SETTINGS_PATH);
+    if (!data) throw new Error('site-config.json not found');
+    const cfg = JSON.parse(data.content);
+    SETTINGS_FIELDS.forEach(key => {
+      const el = document.getElementById(`cfg-${key}`);
+      if (el) { const val = key.split('-').reduce((o, p) => (o ? o[p] : undefined), cfg); el.value = val || ''; }
+    });
+    settingsMsg.textContent = ''; settingsMsg.className = 'form-msg';
+  } catch (err) { settingsMsg.textContent = 'Error loading settings: ' + err.message; settingsMsg.className = 'form-msg error'; }
+}
+
+settingsForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  settingsMsg.textContent = 'Saving...'; settingsMsg.className = 'form-msg';
+  settingsSaveBtn.disabled = true;
+  const cfg = {};
+  SETTINGS_FIELDS.forEach(key => {
+    const el = document.getElementById(`cfg-${key}`);
+    if (!el) return;
+    const parts = key.split('-'); let current = cfg;
+    for (let i = 0; i < parts.length - 1; i++) { if (!current[parts[i]]) current[parts[i]] = {}; current = current[parts[i]]; }
+    current[parts[parts.length - 1]] = el.value;
+  });
+  cfg.siteName = cfg.siteName || "Sosa's 64bit Fix";
+  try {
+    const data = await readFileContent(SETTINGS_PATH);
+    await writeFile(SETTINGS_PATH, JSON.stringify(cfg, null, 2), data ? data.sha : null);
+    settingsMsg.textContent = 'Settings saved!'; settingsMsg.className = 'form-msg success';
+  } catch (err) { settingsMsg.textContent = 'Error: ' + err.message; settingsMsg.className = 'form-msg error'; }
+  settingsSaveBtn.disabled = false;
+});
+
+passwordForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  pwMsg.textContent = ''; pwMsg.className = 'form-msg';
+  pwSaveBtn.disabled = true;
+  const current = document.getElementById('pw-current').value;
+  const newPw = document.getElementById('pw-new').value;
+  const confirm = document.getElementById('pw-confirm').value;
+  if ((await sha256(current)) !== storedHash) { pwMsg.textContent = 'Current password is incorrect.'; pwMsg.className = 'form-msg error'; pwSaveBtn.disabled = false; return; }
+  if (newPw.length < 4) { pwMsg.textContent = 'New password must be at least 4 characters.'; pwMsg.className = 'form-msg error'; pwSaveBtn.disabled = false; return; }
+  if (newPw !== confirm) { pwMsg.textContent = 'New passwords do not match.'; pwMsg.className = 'form-msg error'; pwSaveBtn.disabled = false; return; }
+  try {
+    const data = await readFileContent('admin-config.json');
+    const cfg = data ? JSON.parse(data.content) : {};
+    cfg.passwordHash = await sha256(newPw);
+    await writeFile('admin-config.json', JSON.stringify(cfg, null, 2), data ? data.sha : null);
+    storedHash = cfg.passwordHash;
+    pwMsg.textContent = 'Password updated!'; pwMsg.className = 'form-msg success';
+    passwordForm.reset();
+  } catch (err) { pwMsg.textContent = 'Error: ' + err.message; pwMsg.className = 'form-msg error'; }
+  pwSaveBtn.disabled = false;
+});
+
+let mfaConfig = {};
+
+async function loadMfaStatus() {
+  try { const data = await readFileContent('admin-config.json'); mfaConfig = data ? JSON.parse(data.content) : {}; } catch { mfaConfig = {}; }
+  const enabled = mfaConfig.totpEnabled && mfaConfig.totpSecret;
+  mfaStatusLabel.innerHTML = `Status: ${enabled ? '<span class="mfa-enabled">Enabled</span>' : '<span class="mfa-disabled">Disabled</span>'}`;
+  mfaSetup.style.display = 'none';
+  mfaRecoveryWrap.style.display = 'none';
+  mfaControls.style.display = enabled ? '' : 'none';
+  mfaEnableBtn.style.display = enabled ? 'none' : '';
+}
+
+mfaEnableBtn.addEventListener('click', () => {
+  tempSecret = generateTOTPSecret();
+  mfaSetup.style.display = '';
+  mfaEnableBtn.style.display = 'none';
+  mfaRecoveryWrap.style.display = 'none';
+  mfaControls.style.display = 'none';
+  mfaSetupMsg.textContent = ''; mfaSetupMsg.className = 'form-msg';
+  mfaQr.innerHTML = '';
+  mfaSecretText.textContent = tempSecret;
+  try {
+    const uri = generateTOTPUri(tempSecret, 'Sosa\'s 64bit Fix');
+    new QRCode(mfaQr, { text: uri, width: 180, height: 180, colorDark: '#00d4ff', colorLight: '#0a0a0f', correctLevel: QRCode.CorrectLevel.H });
+  } catch { mfaQr.innerHTML = '<p style="color:var(--clr-text-light);font-size:0.85rem">Could not render QR. Use the secret key below.</p>'; }
+});
+
+mfaCancelBtn.addEventListener('click', () => { mfaSetup.style.display = 'none'; mfaEnableBtn.style.display = ''; tempSecret = ''; });
+
+mfaVerifyBtn.addEventListener('click', async () => {
+  const code = mfaVerifyCode.value.trim();
+  if (!/^\d{6}$/.test(code)) { mfaSetupMsg.textContent = 'Enter a valid 6-digit code.'; mfaSetupMsg.className = 'form-msg error'; return; }
+  mfaSetupMsg.textContent = 'Verifying...'; mfaSetupMsg.className = 'form-msg';
+  try {
+    if (!(await verifyTOTP(tempSecret, code))) { mfaSetupMsg.textContent = 'Invalid code. Make sure your authenticator app is set up correctly.'; mfaSetupMsg.className = 'form-msg error'; return; }
+    const codes = generatePlainCodes(8);
+    tempRecoveryPlain = codes;
+    const data = await readFileContent('admin-config.json');
+    const cfg = data ? JSON.parse(data.content) : {};
+    cfg.totpSecret = tempSecret; cfg.totpEnabled = true; cfg.recoveryCodeHashes = await hashCodes(codes);
+    await writeFile('admin-config.json', JSON.stringify(cfg, null, 2), data ? data.sha : null);
+    mfaConfig = cfg;
+    mfaSetup.style.display = 'none';
+    mfaRecoveryList.innerHTML = codes.map(c => `<code class="rcode">${c}</code>`).join('');
+    mfaRecoveryWrap.style.display = '';
+    mfaControls.style.display = 'none';
+    mfaStatusLabel.innerHTML = 'Status: <span class="mfa-enabled">Enabled</span>';
+  } catch (err) { mfaSetupMsg.textContent = 'Error: ' + err.message; mfaSetupMsg.className = 'form-msg error'; }
+});
+
+mfaRecoveryDoneBtn.addEventListener('click', () => { mfaRecoveryWrap.style.display = 'none'; mfaControls.style.display = ''; mfaEnableBtn.style.display = 'none'; mfaVerifyCode.value = ''; });
+
+mfaShowRecoveryBtn.addEventListener('click', async () => {
+  const label = prompt('Enter your admin password to view recovery codes:');
+  if (!label) return;
+  if ((await sha256(label)) !== storedHash) { alert('Incorrect password.'); return; }
+  try {
+    const data = await readFileContent('admin-config.json');
+    const cfg = data ? JSON.parse(data.content) : {};
+    const hashes = cfg.recoveryCodeHashes || [];
+    if (!hashes.length) { alert('No recovery codes remaining. Generate new ones.'); return; }
+    alert(`You have ${hashes.length} recovery code(s) remaining.\n\nCodes cannot be retrieved for security — generate new ones if needed.`);
+  } catch { alert('Could not load recovery codes.'); }
+});
+
+mfaRegenBtn.addEventListener('click', async () => {
+  if (!confirm('Generate new recovery codes? Previous codes will stop working.')) return;
+  try {
+    const codes = generatePlainCodes(8);
+    const hashes = await hashCodes(codes);
+    const data = await readFileContent('admin-config.json');
+    const cfg = data ? JSON.parse(data.content) : {};
+    cfg.recoveryCodeHashes = hashes;
+    await writeFile('admin-config.json', JSON.stringify(cfg, null, 2), data ? data.sha : null);
+    mfaConfig = cfg;
+    mfaRecoveryList.innerHTML = codes.map(c => `<code class="rcode">${c}</code>`).join('');
+    mfaRecoveryWrap.style.display = '';
+    mfaControls.style.display = 'none';
+    mfaControlMsg.textContent = '';
+  } catch (err) { mfaControlMsg.textContent = 'Error: ' + err.message; mfaControlMsg.className = 'form-msg error'; }
+});
+
+mfaDisableBtn.addEventListener('click', async () => {
+  if (!confirm('Disable MFA? Your authenticator app will stop working.')) return;
+  try {
+    const data = await readFileContent('admin-config.json');
+    const cfg = data ? JSON.parse(data.content) : {};
+    cfg.totpSecret = null; cfg.totpEnabled = false; cfg.recoveryCodeHashes = [];
+    await writeFile('admin-config.json', JSON.stringify(cfg, null, 2), data ? data.sha : null);
+    mfaConfig = cfg;
+    mfaStatusLabel.innerHTML = 'Status: <span class="mfa-disabled">Disabled</span>';
+    mfaControls.style.display = 'none';
+    mfaEnableBtn.style.display = '';
+    mfaControlMsg.textContent = 'MFA disabled.'; mfaControlMsg.className = 'form-msg success';
+  } catch (err) { mfaControlMsg.textContent = 'Error: ' + err.message; mfaControlMsg.className = 'form-msg error'; }
+});
+
+(function init() {
+  const savedToken = localStorage.getItem('adminToken');
+  const savedOwner = localStorage.getItem('adminOwner');
+  const savedRepo = localStorage.getItem('adminRepo');
+  if (savedToken && savedOwner && savedRepo) {
+    token = savedToken; owner = savedOwner; repo = savedRepo;
+    document.getElementById('loginToken').value = savedToken;
+    document.getElementById('loginOwner').value = savedOwner;
+    document.getElementById('loginRepo').value = savedRepo;
+    showDashboard();
+  }
+})();

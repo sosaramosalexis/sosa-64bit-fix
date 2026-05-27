@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Sosa's 64bit Fix</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="css/admin.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+
+  <!-- ===== LOGIN VIEW ===== -->
+  <div class="admin-view" id="viewLogin">
+    <div class="admin-card login-card">
+      <div class="login-logo">Sosa's 64bit Fix</div>
+      <p class="login-sub">Admin Panel</p>
+
+      <form id="loginForm">
+        <label>
+          Admin Password
+          <input type="password" id="loginPassword" required>
+        </label>
+        <label>
+          GitHub Token (<a href="https://github.com/settings/tokens" target="_blank">create one</a> with <code>repo</code> scope)
+          <input type="password" id="loginToken" required>
+        </label>
+        <div class="form-row">
+          <label>
+            Repo Owner
+            <input type="text" id="loginOwner" value="alsosram" required>
+          </label>
+          <label>
+            Repo Name
+            <input type="text" id="loginRepo" value="sosa-64bit-fix" required>
+          </label>
+        </div>
+        <button type="submit" class="btn btn-primary">Sign In</button>
+        <p class="login-error" id="loginError"></p>
+      </form>
+
+      <div id="loginStep2" style="display:none">
+        <hr style="margin:20px 0;border:none;border-top:1px solid var(--clr-border)">
+        <p style="text-align:center;font-size:0.85rem;color:var(--clr-text-light);margin-bottom:16px">Multi-factor authentication</p>
+
+        <div id="loginTotpStep">
+          <p style="text-align:center;margin-bottom:16px">Enter the 6-digit code from your authenticator app:</p>
+          <input type="text" id="loginTotp" maxlength="6" pattern="[0-9]{6}" placeholder="000000" autocomplete="one-time-code" style="text-align:center;font-size:1.3rem;letter-spacing:6px;font-weight:600">
+          <button type="button" class="btn btn-primary" id="loginTotpBtn" style="width:100%;margin-top:12px">Verify</button>
+          <p style="text-align:center;margin-top:12px;font-size:0.8rem">
+            <a href="#" id="loginUseRecovery">Use a recovery code instead</a>
+          </p>
+          <p class="login-error" id="loginTotpError"></p>
+        </div>
+
+        <div id="loginRecoveryStep" style="display:none">
+          <p style="text-align:center;margin-bottom:16px">Enter one of your recovery codes:</p>
+          <input type="text" id="loginRecoveryCode" placeholder="XXXX-XXXX-XX" style="text-align:center;font-size:1rem;letter-spacing:2px">
+          <button type="button" class="btn btn-primary" id="loginRecoveryBtn" style="width:100%;margin-top:12px">Verify</button>
+          <p style="text-align:center;margin-top:12px;font-size:0.8rem">
+            <a href="#" id="loginBackToTotp">Back to authenticator code</a>
+          </p>
+          <p class="login-error" id="loginRecoveryError"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== DASHBOARD VIEW ===== -->
+  <div class="admin-view" id="viewDashboard" style="display:none">
+    <header class="admin-header">
+      <div class="container header-inner">
+        <a href="index.html" class="logo">Sosa's 64bit Fix</a>
+        <nav>
+          <a href="index.html" target="_blank" class="nav-link">View Site</a>
+          <button id="logoutBtn" class="nav-link" style="background:none;border:none;cursor:pointer">Logout</button>
+        </nav>
+      </div>
+    </header>
+
+    <div class="admin-tabs container">
+      <button class="tab active" data-tab="repairs">Repairs</button>
+      <button class="tab" data-tab="devices">Devices</button>
+      <button class="tab" data-tab="reviews">Reviews</button>
+      <button class="tab" data-tab="settings">Settings</button>
+      <button class="tab" data-tab="account">Account</button>
+    </div>
+
+    <main class="admin-main container">
+
+      <!-- ===== REPAIRS TAB ===== -->
+      <div class="tab-content" id="tabRepairs">
+        <div class="dash-top">
+          <h2><i class="fas fa-tools"></i> Repairs</h2>
+          <button id="newRepairBtn" class="btn btn-primary">+ New Repair</button>
+        </div>
+        <div class="loading" id="repairsLoading">Loading repairs...</div>
+        <table class="data-table" id="repairsTable" style="display:none">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Device</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="repairsBody"></tbody>
+        </table>
+        <p class="empty-state" id="repairsEmpty" style="display:none">No repairs yet. Click "+ New Repair" to add one!</p>
+      </div>
+
+      <!-- ===== DEVICES TAB ===== -->
+      <div class="tab-content" id="tabDevices" style="display:none">
+        <div class="dash-top">
+          <h2><i class="fas fa-server"></i> Device Assets</h2>
+          <button id="newDeviceBtn" class="btn btn-primary">+ Register Device</button>
+        </div>
+        <div class="loading" id="devicesLoading">Loading devices...</div>
+        <table class="data-table" id="devicesTable" style="display:none">
+          <thead>
+            <tr>
+              <th>Serial #</th>
+              <th>Customer</th>
+              <th>Device</th>
+              <th>Type</th>
+              <th>Date Added</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="devicesBody"></tbody>
+        </table>
+        <p class="empty-state" id="devicesEmpty" style="display:none">No devices registered. Click "+ Register Device" to add one!</p>
+      </div>
+
+      <!-- ===== REVIEWS TAB ===== -->
+      <div class="tab-content" id="tabReviews" style="display:none">
+        <div class="dash-top">
+          <h2><i class="fas fa-star"></i> Reviews</h2>
+        </div>
+        <div class="loading" id="reviewsLoading">Loading reviews...</div>
+
+        <div class="review-section-group">
+          <h3><i class="fas fa-clock"></i> Pending Approval</h3>
+          <div id="pendingReviews"></div>
+        </div>
+
+        <div class="review-section-group">
+          <h3><i class="fas fa-check-circle"></i> Approved</h3>
+          <div id="approvedReviews"></div>
+        </div>
+
+        <p class="empty-state" id="reviewsEmpty" style="display:none">No reviews yet.</p>
+      </div>
+
+      <!-- ===== SETTINGS TAB ===== -->
+      <div class="tab-content" id="tabSettings" style="display:none">
+        <div class="dash-top">
+          <h2><i class="fas fa-cog"></i> Site Settings</h2>
+          <span class="settings-hint">Edit the content shown on your website.</span>
+        </div>
+        <form id="settingsForm" class="settings-form">
+          <div class="settings-group">
+            <h3>Global</h3>
+            <label>Site Name <input type="text" id="cfg-siteName"></label>
+            <label>Meta Description <textarea id="cfg-metaDescription" rows="2"></textarea></label>
+          </div>
+          <div class="settings-group">
+            <h3>Hero Section</h3>
+            <label>Badge Text <input type="text" id="cfg-hero-badge"></label>
+            <label>Title (HTML allowed) <textarea id="cfg-hero-title" rows="2"></textarea></label>
+            <label>Subtitle <textarea id="cfg-hero-subtitle" rows="2"></textarea></label>
+            <label>Stat - Repairs Done <input type="text" id="cfg-hero-statRepairs"></label>
+            <label>Stat - Happy Clients <input type="text" id="cfg-hero-statHappy"></label>
+            <label>Stat - Years Exp <input type="text" id="cfg-hero-statYears"></label>
+          </div>
+          <div class="settings-group">
+            <h3>Services</h3>
+            <label>Section Title <input type="text" id="cfg-services-title"></label>
+            <label>Section Subtitle <textarea id="cfg-services-subtitle" rows="2"></textarea></label>
+          </div>
+          <div class="settings-group">
+            <h3>Repairs</h3>
+            <label>Section Title <input type="text" id="cfg-repairs-title"></label>
+            <label>Section Subtitle <textarea id="cfg-repairs-subtitle" rows="2"></textarea></label>
+          </div>
+          <div class="settings-group">
+            <h3>Reviews</h3>
+            <label>Section Title <input type="text" id="cfg-reviews-title"></label>
+            <label>Section Subtitle <textarea id="cfg-reviews-subtitle" rows="2"></textarea></label>
+          </div>
+          <div class="settings-group">
+            <h3>About</h3>
+            <label>Title <input type="text" id="cfg-about-title"></label>
+            <label>Paragraph 1 <textarea id="cfg-about-paragraph1" rows="3"></textarea></label>
+            <label>Paragraph 2 <textarea id="cfg-about-paragraph2" rows="3"></textarea></label>
+            <label>Detail 1 <input type="text" id="cfg-about-detail1"></label>
+            <label>Detail 2 <input type="text" id="cfg-about-detail2"></label>
+            <label>Detail 3 <input type="text" id="cfg-about-detail3"></label>
+            <label>Image URL <input type="url" id="cfg-about-image"></label>
+          </div>
+          <div class="settings-group">
+            <h3>Contact</h3>
+            <label>Section Title <input type="text" id="cfg-contact-title"></label>
+            <label>Section Subtitle <textarea id="cfg-contact-subtitle" rows="2"></textarea></label>
+            <label>Address <input type="text" id="cfg-contact-address"></label>
+            <label>Email <input type="text" id="cfg-contact-email"></label>
+            <label>Hours <input type="text" id="cfg-contact-hours"></label>
+          </div>
+          <div class="settings-group">
+            <h3>Footer</h3>
+            <label>Tagline <input type="text" id="cfg-footer-tagline"></label>
+          </div>
+          <div class="editor-actions">
+            <button type="submit" class="btn btn-primary" id="settingsSaveBtn">Save Settings</button>
+          </div>
+          <p class="form-msg" id="settingsMsg"></p>
+        </form>
+      </div>
+
+      <!-- ===== ACCOUNT TAB ===== -->
+      <div class="tab-content" id="tabAccount" style="display:none">
+        <div class="dash-top">
+          <h2><i class="fas fa-user-shield"></i> Account</h2>
+        </div>
+
+        <form id="passwordForm" class="settings-form">
+          <div class="settings-group">
+            <h3>Change Password</h3>
+            <label>Current Password <input type="password" id="pw-current" required></label>
+            <label>New Password <input type="password" id="pw-new" required minlength="4"></label>
+            <label>Confirm New Password <input type="password" id="pw-confirm" required minlength="4"></label>
+            <div class="editor-actions">
+              <button type="submit" class="btn btn-primary" id="pwSaveBtn">Update Password</button>
+            </div>
+            <p class="form-msg" id="pwMsg"></p>
+          </div>
+        </form>
+
+        <div class="settings-group mfa-group">
+          <h3>Multi-Factor Authentication</h3>
+          <p class="mfa-status" id="mfaStatusLabel">Status: <span class="mfa-disabled">Disabled</span></p>
+
+          <div id="mfaSetup" style="display:none">
+            <p class="mfa-desc">Scan this QR code with <strong>Google Authenticator</strong> (or any TOTP app):</p>
+            <div class="mfa-qr-wrap">
+              <div id="mfaQr"></div>
+            </div>
+            <p class="mfa-secret-label">Or enter this key manually:</p>
+            <p class="mfa-secret" id="mfaSecretText"></p>
+            <div class="mfa-verify">
+              <label>Verify by entering the 6-digit code from the app:
+                <input type="text" id="mfaVerifyCode" maxlength="6" pattern="[0-9]{6}" placeholder="000000" style="text-align:center;font-size:1.2rem;letter-spacing:4px;font-weight:600">
+              </label>
+              <button type="button" class="btn btn-primary" id="mfaVerifyBtn">Verify & Enable</button>
+              <button type="button" class="btn btn-secondary" id="mfaCancelBtn">Cancel</button>
+            </div>
+            <p class="form-msg" id="mfaSetupMsg"></p>
+          </div>
+
+          <div id="mfaRecoveryWrap" style="display:none">
+            <p class="mfa-desc"><strong>Save these recovery codes in a safe place!</strong> Each can be used once to log in if you lose access to your authenticator app.</p>
+            <div class="mfa-recovery-codes" id="mfaRecoveryList"></div>
+            <button type="button" class="btn btn-primary" id="mfaRecoveryDoneBtn">I've saved these codes</button>
+          </div>
+
+          <div id="mfaControls" style="display:none">
+            <div class="mfa-recovery-section">
+              <p class="mfa-desc">Recovery codes (click to expand):</p>
+              <button type="button" class="btn btn-secondary btn-sm" id="mfaShowRecoveryBtn">Show Codes</button>
+              <button type="button" class="btn btn-secondary btn-sm" id="mfaRegenBtn">Regenerate Codes</button>
+            </div>
+            <div style="margin-top:16px">
+              <button type="button" class="btn btn-danger btn-sm" id="mfaDisableBtn">Disable MFA</button>
+            </div>
+            <p class="form-msg" id="mfaControlMsg"></p>
+          </div>
+
+          <div class="mfa-actions">
+            <button type="button" class="btn btn-primary" id="mfaEnableBtn" style="display:none">Enable MFA</button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ===== REPAIR EDITOR VIEW ===== -->
+  <div class="admin-view" id="viewRepairEditor" style="display:none">
+    <header class="admin-header">
+      <div class="container header-inner">
+        <a href="index.html" class="logo">Sosa's 64bit Fix</a>
+        <nav>
+          <button id="repairEditorBackBtn" class="nav-link" style="background:none;border:none;cursor:pointer">&larr; Back</button>
+        </nav>
+      </div>
+    </header>
+    <main class="admin-main container">
+      <h2 id="repairEditorTitle">New Repair</h2>
+      <form id="repairEditorForm" class="editor-form">
+        <div class="form-row">
+          <label>Title <input type="text" id="edTitle" required></label>
+          <label>Slug <input type="text" id="edSlug" required></label>
+        </div>
+        <div class="form-row">
+          <label>Device Type <input type="text" id="edDeviceType" placeholder="e.g. Laptop, Desktop, Phone" required></label>
+          <label>Device Model <input type="text" id="edDeviceModel" placeholder="e.g. Dell XPS 15, HP Pavilion" required></label>
+        </div>
+        <div class="form-row">
+          <label>Issue <input type="text" id="edIssue" placeholder="e.g. Dead motherboard, Cracked screen" required></label>
+          <label>Date <input type="date" id="edDate" required></label>
+        </div>
+        <div class="form-row">
+          <label>Status
+            <select id="edStatus">
+              <option value="Completed">Completed</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Diagnosing">Diagnosing</option>
+            </select>
+          </label>
+          <label>Image URL
+            <div class="img-url-row">
+              <input type="url" id="edImage" placeholder="https://images.unsplash.com/...">
+              <button type="button" class="btn btn-secondary btn-sm" id="edImageUploadBtn">Upload</button>
+            </div>
+          </label>
+          <input type="file" id="edImageFile" accept="image/*" style="display:none">
+        </div>
+        <label>Excerpt (shown on repair cards) <textarea id="edExcerpt" rows="2" required></textarea></label>
+        <label>Problem Description <textarea id="edProblem" rows="3" required></textarea></label>
+        <label>Diagnosis / Process <textarea id="edProcess" rows="4" required placeholder="Step by step what was done..."></textarea></label>
+        <label>Parts Used (one per line) <textarea id="edParts" rows="3" placeholder="e.g. Samsung 1TB SSD&#10;16GB DDR4 RAM"></textarea></label>
+        <label>Customer Review (optional)
+          <div class="review-sub-fields">
+            <div class="form-row">
+              <input type="text" id="edReviewAuthor" placeholder="Customer name">
+              <select id="edReviewRating">
+                <option value="">Rating</option>
+                <option value="5">5 Stars</option>
+                <option value="4">4 Stars</option>
+                <option value="3">3 Stars</option>
+                <option value="2">2 Stars</option>
+                <option value="1">1 Star</option>
+              </select>
+            </div>
+            <textarea id="edReviewText" rows="2" placeholder="What the customer said..."></textarea>
+          </div>
+        </label>
+        <div class="editor-actions">
+          <button type="submit" class="btn btn-primary" id="edSaveBtn">Publish Repair</button>
+          <button type="button" class="btn btn-secondary" id="edCancelBtn">Cancel</button>
+        </div>
+        <p class="form-msg" id="edMsg"></p>
+      </form>
+    </main>
+  </div>
+
+  <!-- ===== DEVICE EDITOR VIEW ===== -->
+  <div class="admin-view" id="viewDeviceEditor" style="display:none">
+    <header class="admin-header">
+      <div class="container header-inner">
+        <a href="index.html" class="logo">Sosa's 64bit Fix</a>
+        <nav>
+          <button id="deviceEditorBackBtn" class="nav-link" style="background:none;border:none;cursor:pointer">&larr; Back</button>
+        </nav>
+      </div>
+    </header>
+    <main class="admin-main container">
+      <h2 id="deviceEditorTitle">Register Device</h2>
+      <form id="deviceEditorForm" class="editor-form">
+        <div class="form-row">
+          <label>Customer Name <input type="text" id="edDeviceCustomer" required></label>
+          <label>Serial Number <input type="text" id="edDeviceSerial" required placeholder="Unique serial / service tag"></label>
+        </div>
+        <div class="form-row">
+          <label>Device Type <input type="text" id="edDeviceType2" placeholder="e.g. Laptop, Desktop, Tablet" required></label>
+          <label>Brand <input type="text" id="edDeviceBrand" placeholder="e.g. Dell, HP, Lenovo" required></label>
+        </div>
+        <div class="form-row">
+          <label>Model <input type="text" id="edDeviceModel2" required></label>
+          <label>Year <input type="text" id="edDeviceYear" placeholder="e.g. 2023"></label>
+        </div>
+        <label>Specs / Notes
+          <textarea id="edDeviceSpecs" rows="3" placeholder="CPU, RAM, Storage, OS, any notes..."></textarea>
+        </label>
+        <div class="editor-actions">
+          <button type="submit" class="btn btn-primary" id="edDeviceSaveBtn">Register Device</button>
+          <button type="button" class="btn btn-secondary" id="edDeviceCancelBtn">Cancel</button>
+        </div>
+        <p class="form-msg" id="edDeviceMsg"></p>
+      </form>
+    </main>
+  </div>
+
+  <script src="js/admin.js"></script>
+</body>
+</html>

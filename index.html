@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-cfg="titleTag">Sosa's 64bit Fix — Computer Repair</title>
+  <meta name="description" data-cfg="metaDescription" content="Expert computer repair services by Sosa's 64bit Fix. Fast, reliable, and affordable repairs for all your tech needs.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <div class="scanlines"></div>
+
+  <header class="site-header" id="top">
+    <div class="container header-inner">
+      <a href="#" class="logo" data-cfg="siteName">Sosa's 64bit Fix</a>
+      <nav class="main-nav" id="mainNav">
+        <button class="nav-toggle" id="navToggle" aria-label="Menu" aria-expanded="false"><i class="fas fa-bars"></i></button>
+        <ul class="nav-list">
+          <li><a href="#home" class="nav-link active">Home</a></li>
+          <li><a href="#services" class="nav-link">Services</a></li>
+          <li><a href="#repairs" class="nav-link">Repairs</a></li>
+          <li><a href="#reviews" class="nav-link">Reviews</a></li>
+          <li><a href="#about" class="nav-link">About</a></li>
+          <li><a href="#contact" class="nav-link">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ===== HERO ===== -->
+    <section class="hero" id="home">
+      <div class="hero-grid-bg"></div>
+      <div class="container hero-content">
+        <div class="hero-badge" data-cfg="hero.badge">SINCE 2024</div>
+        <h1 data-cfg="hero.title">Your PC.<br>Our <span class="highlight">Expertise.</span></h1>
+        <p data-cfg="hero.subtitle">Professional computer repair, upgrades, and diagnostics. Fast turnaround, fair prices, and work you can trust.</p>
+        <div class="hero-actions">
+          <a href="#contact" class="btn btn-primary">Get a Quote</a>
+          <a href="#repairs" class="btn btn-outline">View Repairs</a>
+        </div>
+        <div class="hero-stats">
+          <div class="stat">
+            <span class="stat-number" data-cfg="hero.statRepairs">500+</span>
+            <span class="stat-label">Repairs Done</span>
+          </div>
+          <div class="stat">
+            <span class="stat-number" data-cfg="hero.statHappy">98%</span>
+            <span class="stat-label">Happy Clients</span>
+          </div>
+          <div class="stat">
+            <span class="stat-number" data-cfg="hero.statYears">10+</span>
+            <span class="stat-label">Years Exp</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== SERVICES ===== -->
+    <section class="section services-section" id="services">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">What I Do</span>
+          <h2 class="section-title" data-cfg="services.title">Repair Services</h2>
+          <p class="section-subtitle" data-cfg="services.subtitle">From virus removal to hardware upgrades — I've got you covered</p>
+        </div>
+        <div class="services-grid">
+          <div class="service-card">
+            <div class="service-icon"><i class="fas fa-microchip"></i></div>
+            <h3>Hardware Repair</h3>
+            <p>Motherboard, GPU, PSU, and component-level repairs with precision诊断.</p>
+          </div>
+          <div class="service-card">
+            <div class="service-icon"><i class="fas fa-laptop"></i></div>
+            <h3>Laptop & Desktop</h3>
+            <p>Screen replacements, keyboard fixes, thermal repaste, and full system overhauls.</p>
+          </div>
+          <div class="service-card">
+            <div class="service-icon"><i class="fas fa-bug"></i></div>
+            <h3>Virus & Malware</h3>
+            <p>Deep clean infections, remove ransomware, and secure your system.</p>
+          </div>
+          <div class="service-card">
+            <div class="service-icon"><i class="fas fa-database"></i></div>
+            <h3>Data Recovery</h3>
+            <p>Recover lost files from dead drives, corrupted media, and accidental deletion.</p>
+          </div>
+          <div class="service-card">
+            <div class="service-icon"><i class="fas fa-tachometer-alt"></i></div>
+            <h3>Performance Tuning</h3>
+            <p>SSD upgrades, RAM expansion, OS optimization — make your PC fly again.</p>
+          </div>
+          <div class="service-card">
+            <div class="service-icon"><i class="fas fa-network-wired"></i></div>
+            <h3>Network Setup</h3>
+            <p>WiFi troubleshooting, home network configuration, and secure remote access.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== REPAIRS ===== -->
+    <section class="section repairs-section" id="repairs">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">My Work</span>
+          <h2 class="section-title" data-cfg="repairs.title">Recent Repairs</h2>
+          <p class="section-subtitle" data-cfg="repairs.subtitle">Real repairs I've done — see the process and results</p>
+        </div>
+        <div class="repairs-grid" id="repairsGrid">
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== REVIEWS ===== -->
+    <section class="section reviews-section" id="reviews">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">Testimonials</span>
+          <h2 class="section-title" data-cfg="reviews.title">What Clients Say</h2>
+          <p class="section-subtitle" data-cfg="reviews.subtitle">Real reviews from real customers</p>
+        </div>
+        <div class="reviews-grid" id="reviewsGrid">
+        </div>
+        <div class="reviews-bottom">
+          <button class="btn btn-outline" id="openReviewModalBtn"><i class="fas fa-star"></i> Leave a Review</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ABOUT ===== -->
+    <section class="section about-section" id="about">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">About Me</span>
+          <h2 class="section-title" data-cfg="about.title">The Man Behind The Bench</h2>
+        </div>
+        <div class="about-content">
+          <div class="about-text">
+            <p data-cfg="about.paragraph1">Welcome to <strong>Sosa's 64bit Fix</strong> — your trusted local computer repair shop. I'm Sosa, a certified technician with years of hands-on experience reviving dead PCs, upgrading aging laptops, and making technology work for you.</p>
+            <p data-cfg="about.paragraph2">I believe in transparent pricing, honest diagnostics, and treating every device like it's my own. Whether you spilled coffee on your laptop, got hit with ransomware, or just need a tune-up — I'll get you back up and running.</p>
+            <div class="about-details">
+              <div class="about-detail">
+                <i class="fas fa-check-circle"></i>
+                <span data-cfg="about.detail1">Certified & insured</span>
+              </div>
+              <div class="about-detail">
+                <i class="fas fa-check-circle"></i>
+                <span data-cfg="about.detail2">Free diagnostics</span>
+              </div>
+              <div class="about-detail">
+                <i class="fas fa-check-circle"></i>
+                <span data-cfg="about.detail3">90-day warranty on repairs</span>
+              </div>
+            </div>
+          </div>
+          <div class="about-image">
+            <div class="about-img-frame">
+              <img data-cfg-src="about.image" src="https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?w=600&q=80" alt="Computer repair workbench">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== CONTACT ===== -->
+    <section class="section contact-section" id="contact">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">Get In Touch</span>
+          <h2 class="section-title" data-cfg="contact.title">Let's Fix It</h2>
+          <p class="section-subtitle" data-cfg="contact.subtitle">Have a broken device? Drop me a message and I'll get back to you ASAP.</p>
+        </div>
+        <div class="contact-wrap">
+          <form class="contact-form" id="contactForm">
+            <div class="form-row">
+              <input type="text" name="name" placeholder="Your Name" required>
+              <input type="email" name="email" placeholder="Your Email" required>
+            </div>
+            <input type="text" name="subject" placeholder="Subject (e.g. Laptop Repair)">
+            <textarea name="message" rows="5" placeholder="Describe the issue..." required></textarea>
+            <p class="form-msg" id="contactMsg"></p>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Send Message</button>
+          </form>
+          <div class="contact-info">
+            <div class="contact-item">
+              <i class="fas fa-map-marker-alt"></i>
+              <div>
+                <strong>Location</strong>
+                <span data-cfg="contact.address">San Diego, CA</span>
+              </div>
+            </div>
+            <div class="contact-item">
+              <i class="fas fa-envelope"></i>
+              <div>
+                <strong>Email</strong>
+                <span data-cfg="contact.email">sosa@64bitfix.com</span>
+              </div>
+            </div>
+            <div class="contact-item">
+              <i class="fas fa-clock"></i>
+              <div>
+                <strong>Hours</strong>
+                <span data-cfg="contact.hours">Mon-Fri 9AM-7PM, Sat 10AM-4PM</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <span class="footer-logo" data-cfg="siteName">Sosa's 64bit Fix</span>
+        <p class="footer-tagline" data-cfg="footer.tagline">Fixing your tech, one bit at a time.</p>
+      </div>
+      <ul class="footer-links">
+        <li><a href="#home">Home</a></li>
+        <li><a href="#services">Services</a></li>
+        <li><a href="#repairs">Repairs</a></li>
+        <li><a href="#reviews">Reviews</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#contact">Contact</a></li>
+        <li><a href="admin.html">Admin</a></li>
+      </ul>
+      <p class="footer-copy">&copy; 2026 Sosa's 64bit Fix. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- ===== REPAIR DETAIL MODAL ===== -->
+  <div class="modal-overlay" id="repairModal">
+    <div class="modal" id="repairModalContent"></div>
+  </div>
+
+  <!-- ===== REVIEW SUBMIT MODAL ===== -->
+  <div class="modal-overlay" id="reviewModal">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h3>Leave a Review</h3>
+        <button class="modal-close-btn" id="reviewModalClose">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="reviewForm">
+          <label>
+            Your Name
+            <input type="text" id="reviewName" required>
+          </label>
+          <label>
+            Device Serial Number
+            <div class="input-hint">Enter the serial number from the device I repaired for you</div>
+            <input type="text" id="reviewSerial" required placeholder="e.g. SN-XXXX-XXXX">
+          </label>
+          <label>
+            Rating
+            <div class="star-input" id="starInput">
+              <i class="far fa-star" data-star="1"></i>
+              <i class="far fa-star" data-star="2"></i>
+              <i class="far fa-star" data-star="3"></i>
+              <i class="far fa-star" data-star="4"></i>
+              <i class="far fa-star" data-star="5"></i>
+            </div>
+          </label>
+          <label>
+            Your Review
+            <textarea id="reviewText" rows="4" required placeholder="Tell others about your experience..."></textarea>
+          </label>
+          <p class="form-msg" id="reviewMsg"></p>
+          <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Submit Review</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
