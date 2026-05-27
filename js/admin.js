@@ -699,6 +699,70 @@ settingsForm.addEventListener('submit', async (e) => {
   settingsSaveBtn.disabled = false;
 });
 
+async function translateText(text) {
+  if (!text || typeof text !== 'string') return text;
+  if (/^[\d\s%+\-.,]+$/.test(text.trim())) return text;
+  try {
+    const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=es&dt=t&q=${encodeURIComponent(text)}`);
+    const data = await res.json();
+    if (data && data[0] && data[0][0] && data[0][0][0]) {
+      return data[0][0][0];
+    }
+    return text;
+  } catch { return text; }
+}
+
+async function translateAllToSpanish() {
+  const translateBtn = document.getElementById('translateBtn');
+  const originalText = translateBtn.innerHTML;
+  translateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Translating...';
+  translateBtn.disabled = true;
+  settingsMsg.textContent = 'Translating all content to Spanish...';
+  settingsMsg.className = 'form-msg';
+
+  try {
+    const langData = await readFileContent('lang/en.json');
+    const enLang = langData ? JSON.parse(langData.content) : {};
+    const esData = await readFileContent('lang/es.json');
+    let esLang = esData ? JSON.parse(esData.content) : {};
+
+    const keysToTranslate = Object.keys(enLang);
+    const skipKeys = ['contact.email'];
+    let translated = 0;
+    let total = 0;
+
+    for (const key of keysToTranslate) {
+      const enVal = enLang[key];
+      if (!enVal || skipKeys.includes(key)) {
+        if (!esLang[key] && enVal) esLang[key] = enVal;
+        continue;
+      }
+      if (enVal === esLang[key]) total++;
+      const translatedVal = await translateText(enVal);
+      await new Promise(r => setTimeout(r, 200));
+      esLang[key] = translatedVal || enVal;
+      translated++;
+      if (translated % 10 === 0) {
+        settingsMsg.textContent = `Translating... ${translated}/${keysToTranslate.length} strings`;
+      }
+    }
+
+    const esWriteData = await readFileContent('lang/es.json');
+    await writeFile('lang/es.json', JSON.stringify(esLang, null, 2), esWriteData ? esWriteData.sha : null);
+
+    settingsMsg.textContent = `Spanish translation updated! (${translated} strings translated)`;
+    settingsMsg.className = 'form-msg success';
+  } catch (err) {
+    settingsMsg.textContent = 'Translation error: ' + err.message;
+    settingsMsg.className = 'form-msg error';
+  }
+
+  translateBtn.innerHTML = originalText;
+  translateBtn.disabled = false;
+}
+
+document.getElementById('translateBtn').addEventListener('click', translateAllToSpanish);
+
 passwordForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   pwMsg.textContent = ''; pwMsg.className = 'form-msg';
