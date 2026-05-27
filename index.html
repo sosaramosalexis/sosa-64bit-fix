@@ -1,10 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title data-cfg="titleTag">Sosa's 64bit Fix — Computer Repair</title>
   <meta name="description" data-cfg="metaDescription" content="Expert computer repair services by Sosa's 64bit Fix. Fast, reliable, and affordable repairs for all your tech needs.">
+  <link rel="preload" href="lang/en.json" as="fetch" crossorigin>
+  <link rel="preload" href="lang/es.json" as="fetch" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -21,12 +23,17 @@
       <nav class="main-nav" id="mainNav">
         <button class="nav-toggle" id="navToggle" aria-label="Menu" aria-expanded="false"><i class="fas fa-bars"></i></button>
         <ul class="nav-list">
-          <li><a href="#home" class="nav-link active">Home</a></li>
-          <li><a href="#services" class="nav-link">Services</a></li>
-          <li><a href="#repairs" class="nav-link">Repairs</a></li>
-          <li><a href="#reviews" class="nav-link">Reviews</a></li>
-          <li><a href="#about" class="nav-link">About</a></li>
-          <li><a href="#contact" class="nav-link">Contact</a></li>
+          <li><a href="#home" class="nav-link active" data-i18n="nav.home">Home</a></li>
+          <li><a href="#services" class="nav-link" data-i18n="nav.services">Services</a></li>
+          <li><a href="#repairs" class="nav-link" data-i18n="nav.repairs">Repairs</a></li>
+          <li><a href="#reviews" class="nav-link" data-i18n="nav.reviews">Reviews</a></li>
+          <li><a href="#about" class="nav-link" data-i18n="nav.about">About</a></li>
+          <li><a href="#contact" class="nav-link" data-i18n="nav.contact">Contact</a></li>
+          <li class="lang-switcher">
+            <button class="lang-btn active" data-lang="en">EN</button>
+            <span class="lang-sep">|</span>
+            <button class="lang-btn" data-lang="es">ES</button>
+          </li>
         </ul>
       </nav>
     </div>
@@ -42,21 +49,21 @@
         <h1 data-cfg="hero.title">Your PC.<br>Our <span class="highlight">Expertise.</span></h1>
         <p data-cfg="hero.subtitle">Professional computer repair, upgrades, and diagnostics. Fast turnaround, fair prices, and work you can trust.</p>
         <div class="hero-actions">
-          <a href="#contact" class="btn btn-primary">Get a Quote</a>
-          <a href="#repairs" class="btn btn-outline">View Repairs</a>
+          <a href="#contact" class="btn btn-primary" data-i18n="hero.btnQuote">Get a Quote</a>
+          <a href="#repairs" class="btn btn-outline" data-i18n="hero.btnRepairs">View Repairs</a>
         </div>
         <div class="hero-stats">
           <div class="stat">
             <span class="stat-number" data-cfg="hero.statRepairs">500+</span>
-            <span class="stat-label">Repairs Done</span>
+            <span class="stat-label" data-i18n="hero.labelRepairs">Repairs Done</span>
           </div>
           <div class="stat">
             <span class="stat-number" data-cfg="hero.statHappy">98%</span>
-            <span class="stat-label">Happy Clients</span>
+            <span class="stat-label" data-i18n="hero.labelHappy">Happy Clients</span>
           </div>
           <div class="stat">
             <span class="stat-number" data-cfg="hero.statYears">10+</span>
-            <span class="stat-label">Years Exp</span>
+            <span class="stat-label" data-i18n="hero.labelYears">Years Exp</span>
           </div>
         </div>
       </div>
@@ -66,40 +73,40 @@
     <section class="section services-section" id="services">
       <div class="container">
         <div class="section-header">
-          <span class="section-tag">What I Do</span>
+          <span class="section-tag" data-i18n="services.tag">What I Do</span>
           <h2 class="section-title" data-cfg="services.title">Repair Services</h2>
           <p class="section-subtitle" data-cfg="services.subtitle">From virus removal to hardware upgrades — I've got you covered</p>
         </div>
         <div class="services-grid">
           <div class="service-card">
             <div class="service-icon"><i class="fas fa-microchip"></i></div>
-            <h3>Hardware Repair</h3>
-            <p>Motherboard, GPU, PSU, and component-level repairs with precision诊断.</p>
+            <h3 data-i18n="service.hardware">Hardware Repair</h3>
+            <p data-i18n="service.hardwareDesc">Motherboard, GPU, PSU, and component-level repairs with precision diagnostics.</p>
           </div>
           <div class="service-card">
             <div class="service-icon"><i class="fas fa-laptop"></i></div>
-            <h3>Laptop & Desktop</h3>
-            <p>Screen replacements, keyboard fixes, thermal repaste, and full system overhauls.</p>
+            <h3 data-i18n="service.laptop">Laptop & Desktop</h3>
+            <p data-i18n="service.laptopDesc">Screen replacements, keyboard fixes, thermal repaste, and full system overhauls.</p>
           </div>
           <div class="service-card">
             <div class="service-icon"><i class="fas fa-bug"></i></div>
-            <h3>Virus & Malware</h3>
-            <p>Deep clean infections, remove ransomware, and secure your system.</p>
+            <h3 data-i18n="service.virus">Virus & Malware</h3>
+            <p data-i18n="service.virusDesc">Deep clean infections, remove ransomware, and secure your system.</p>
           </div>
           <div class="service-card">
             <div class="service-icon"><i class="fas fa-database"></i></div>
-            <h3>Data Recovery</h3>
-            <p>Recover lost files from dead drives, corrupted media, and accidental deletion.</p>
+            <h3 data-i18n="service.data">Data Recovery</h3>
+            <p data-i18n="service.dataDesc">Recover lost files from dead drives, corrupted media, and accidental deletion.</p>
           </div>
           <div class="service-card">
             <div class="service-icon"><i class="fas fa-tachometer-alt"></i></div>
-            <h3>Performance Tuning</h3>
-            <p>SSD upgrades, RAM expansion, OS optimization — make your PC fly again.</p>
+            <h3 data-i18n="service.performance">Performance Tuning</h3>
+            <p data-i18n="service.performanceDesc">SSD upgrades, RAM expansion, OS optimization — make your PC fly again.</p>
           </div>
           <div class="service-card">
             <div class="service-icon"><i class="fas fa-network-wired"></i></div>
-            <h3>Network Setup</h3>
-            <p>WiFi troubleshooting, home network configuration, and secure remote access.</p>
+            <h3 data-i18n="service.network">Network Setup</h3>
+            <p data-i18n="service.networkDesc">WiFi troubleshooting, home network configuration, and secure remote access.</p>
           </div>
         </div>
       </div>
@@ -109,7 +116,7 @@
     <section class="section repairs-section" id="repairs">
       <div class="container">
         <div class="section-header">
-          <span class="section-tag">My Work</span>
+          <span class="section-tag" data-i18n="repairs.tag">My Work</span>
           <h2 class="section-title" data-cfg="repairs.title">Recent Repairs</h2>
           <p class="section-subtitle" data-cfg="repairs.subtitle">Real repairs I've done — see the process and results</p>
         </div>
@@ -122,14 +129,14 @@
     <section class="section reviews-section" id="reviews">
       <div class="container">
         <div class="section-header">
-          <span class="section-tag">Testimonials</span>
+          <span class="section-tag" data-i18n="reviews.tag">Testimonials</span>
           <h2 class="section-title" data-cfg="reviews.title">What Clients Say</h2>
           <p class="section-subtitle" data-cfg="reviews.subtitle">Real reviews from real customers</p>
         </div>
         <div class="reviews-grid" id="reviewsGrid">
         </div>
         <div class="reviews-bottom">
-          <button class="btn btn-outline" id="openReviewModalBtn"><i class="fas fa-star"></i> Leave a Review</button>
+          <button class="btn btn-outline" id="openReviewModalBtn"><i class="fas fa-star"></i> <span data-i18n="reviews.btn">Leave a Review</span></button>
         </div>
       </div>
     </section>
@@ -138,7 +145,7 @@
     <section class="section about-section" id="about">
       <div class="container">
         <div class="section-header">
-          <span class="section-tag">About Me</span>
+          <span class="section-tag" data-i18n="about.tag">About Me</span>
           <h2 class="section-title" data-cfg="about.title">The Man Behind The Bench</h2>
         </div>
         <div class="about-content">
@@ -148,15 +155,15 @@
             <div class="about-details">
               <div class="about-detail">
                 <i class="fas fa-check-circle"></i>
-                <span data-cfg="about.detail1">Certified & insured</span>
+                <span data-i18n="about.detail1">Certified & insured</span>
               </div>
               <div class="about-detail">
                 <i class="fas fa-check-circle"></i>
-                <span data-cfg="about.detail2">Free diagnostics</span>
+                <span data-i18n="about.detail2">Free diagnostics</span>
               </div>
               <div class="about-detail">
                 <i class="fas fa-check-circle"></i>
-                <span data-cfg="about.detail3">90-day warranty on repairs</span>
+                <span data-i18n="about.detail3">90-day warranty on repairs</span>
               </div>
             </div>
           </div>
@@ -173,40 +180,40 @@
     <section class="section contact-section" id="contact">
       <div class="container">
         <div class="section-header">
-          <span class="section-tag">Get In Touch</span>
+          <span class="section-tag" data-i18n="contact.tag">Get In Touch</span>
           <h2 class="section-title" data-cfg="contact.title">Let's Fix It</h2>
           <p class="section-subtitle" data-cfg="contact.subtitle">Have a broken device? Drop me a message and I'll get back to you ASAP.</p>
         </div>
         <div class="contact-wrap">
           <form class="contact-form" id="contactForm">
             <div class="form-row">
-              <input type="text" name="name" placeholder="Your Name" required>
-              <input type="email" name="email" placeholder="Your Email" required>
+              <input type="text" name="name" data-i18n-placeholder="contact.formName" placeholder="Your Name" required>
+              <input type="email" name="email" data-i18n-placeholder="contact.formEmail" placeholder="Your Email" required>
             </div>
-            <input type="text" name="subject" placeholder="Subject (e.g. Laptop Repair)">
-            <textarea name="message" rows="5" placeholder="Describe the issue..." required></textarea>
+            <input type="text" name="subject" data-i18n-placeholder="contact.formSubject" placeholder="Subject (e.g. Laptop Repair)">
+            <textarea name="message" rows="5" data-i18n-placeholder="contact.formMessage" placeholder="Describe the issue..." required></textarea>
             <p class="form-msg" id="contactMsg"></p>
-            <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Send Message</button>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> <span data-i18n="contact.formBtn">Send Message</span></button>
           </form>
           <div class="contact-info">
             <div class="contact-item">
               <i class="fas fa-map-marker-alt"></i>
               <div>
-                <strong>Location</strong>
+                <strong data-i18n="contact.infoLocation">Location</strong>
                 <span data-cfg="contact.address">San Diego, CA</span>
               </div>
             </div>
             <div class="contact-item">
               <i class="fas fa-envelope"></i>
               <div>
-                <strong>Email</strong>
+                <strong data-i18n="contact.infoEmail">Email</strong>
                 <span data-cfg="contact.email">sosa@64bitfix.com</span>
               </div>
             </div>
             <div class="contact-item">
               <i class="fas fa-clock"></i>
               <div>
-                <strong>Hours</strong>
+                <strong data-i18n="contact.infoHours">Hours</strong>
                 <span data-cfg="contact.hours">Mon-Fri 9AM-7PM, Sat 10AM-4PM</span>
               </div>
             </div>
@@ -230,7 +237,7 @@
         <li><a href="#reviews">Reviews</a></li>
         <li><a href="#about">About</a></li>
         <li><a href="#contact">Contact</a></li>
-        <li><a href="admin.html">Admin</a></li>
+        <li><a href="admin.html" data-i18n="footer.admin">Admin</a></li>
       </ul>
       <p class="footer-copy">&copy; 2026 Sosa's 64bit Fix. All rights reserved.</p>
     </div>
@@ -245,22 +252,22 @@
   <div class="modal-overlay" id="reviewModal">
     <div class="modal modal-sm">
       <div class="modal-header">
-        <h3>Leave a Review</h3>
+        <h3 data-i18n="review.modalTitle">Leave a Review</h3>
         <button class="modal-close-btn" id="reviewModalClose">&times;</button>
       </div>
       <div class="modal-body">
         <form id="reviewForm">
           <label>
-            Your Name
+            <span data-i18n="review.name">Your Name</span>
             <input type="text" id="reviewName" required>
           </label>
           <label>
-            Device Serial Number
-            <div class="input-hint">Enter the serial number from the device I repaired for you</div>
-            <input type="text" id="reviewSerial" required placeholder="e.g. SN-XXXX-XXXX">
+            <span data-i18n="review.serial">Device Serial Number</span>
+            <div class="input-hint" data-i18n="review.serialHint">Enter the serial number from the device I repaired for you</div>
+            <input type="text" id="reviewSerial" required data-i18n-placeholder="review.serialPlaceholder" placeholder="e.g. SN-XXXX-XXXX">
           </label>
           <label>
-            Rating
+            <span data-i18n="review.rating">Rating</span>
             <div class="star-input" id="starInput">
               <i class="far fa-star" data-star="1"></i>
               <i class="far fa-star" data-star="2"></i>
@@ -270,11 +277,11 @@
             </div>
           </label>
           <label>
-            Your Review
-            <textarea id="reviewText" rows="4" required placeholder="Tell others about your experience..."></textarea>
+            <span data-i18n="review.text">Your Review</span>
+            <textarea id="reviewText" rows="4" required data-i18n-placeholder="review.textPlaceholder" placeholder="Tell others about your experience..."></textarea>
           </label>
           <p class="form-msg" id="reviewMsg"></p>
-          <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Submit Review</button>
+          <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> <span data-i18n="review.submit">Submit Review</span></button>
         </form>
       </div>
     </div>

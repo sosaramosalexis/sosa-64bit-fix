@@ -654,7 +654,7 @@ async function rejectReview(id) {
 
 const SETTINGS_PATH = 'site-config.json';
 const SETTINGS_FIELDS = [
-  'siteName', 'metaDescription',
+  'siteName', 'defaultLanguage', 'metaDescription',
   'hero-badge', 'hero-title', 'hero-subtitle', 'hero-statRepairs', 'hero-statHappy', 'hero-statYears',
   'services-title', 'services-subtitle',
   'repairs-title', 'repairs-subtitle',

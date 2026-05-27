@@ -1,6 +1,8 @@
 let allRepairs = [];
 let allReviews = [];
 let siteConfig = {};
+let langData = {};
+let currentLang = 'en';
 
 const repairsGrid = document.getElementById('repairsGrid');
 const reviewsGrid = document.getElementById('reviewsGrid');
@@ -9,12 +11,51 @@ const repairModalContent = document.getElementById('repairModalContent');
 const reviewModal = document.getElementById('reviewModal');
 const navToggle = document.getElementById('navToggle');
 const navList = document.querySelector('.nav-list');
-const navLinks = document.querySelectorAll('.nav-link');
+const navLinks = document.querySelectorAll('.nav-link:not(.lang-btn)');
+const langBtns = document.querySelectorAll('.lang-btn');
 
 function formatDate(dateStr) {
-  return new Date(dateStr).toLocaleDateString('en-US', {
+  const locale = currentLang === 'es' ? 'es-ES' : 'en-US';
+  return new Date(dateStr).toLocaleDateString(locale, {
     year: 'numeric', month: 'long', day: 'numeric'
   });
+}
+
+function getNested(obj, path) {
+  return path.split('.').reduce((o, p) => (o ? o[p] : undefined), obj);
+}
+
+async function loadLang(lang) {
+  try {
+    const res = await fetch(`lang/${lang}.json`, { cache: 'no-cache' });
+    langData = await res.json();
+    currentLang = lang;
+    document.documentElement.lang = lang === 'es' ? 'es' : 'en';
+    document.documentElement.dataset.lang = lang;
+    applyLang();
+    localStorage.setItem('siteLang', lang);
+    langBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.lang === lang));
+    if (siteConfig.siteName) {
+      document.title = `${siteConfig.siteName} — ${lang === 'es' ? 'Reparación de Computadoras' : 'Computer Repair'}`;
+    }
+  } catch {}
+}
+
+function applyLang() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    const val = getNested(langData, key);
+    if (val !== undefined) el.innerHTML = val;
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.dataset.i18nPlaceholder;
+    const val = getNested(langData, key);
+    if (val !== undefined) el.placeholder = val;
+  });
+  if (reviewsGrid && !reviewsGrid.children.length) {
+    const emptyMsg = langData['reviews.empty'] || 'No reviews yet. Be the first to leave one!';
+    reviewsGrid.innerHTML = `<p style="text-align:center;color:var(--clr-text-light);grid-column:1/-1">${emptyMsg}</p>`;
+  }
 }
 
 async function loadConfig() {
@@ -22,6 +63,10 @@ async function loadConfig() {
     const res = await fetch('site-config.json', { cache: 'no-cache' });
     siteConfig = await res.json();
     applyConfig(siteConfig);
+    const preferred = localStorage.getItem('siteLang') || navigator.language.split('-')[0] || 'en';
+    const defaultLang = siteConfig.defaultLanguage || 'en';
+    const detected = (preferred === 'es') ? 'es' : 'en';
+    await loadLang(detected || defaultLang);
   } catch {}
 }
 
@@ -44,10 +89,6 @@ function applyConfig(cfg) {
   if (metaDesc && cfg.metaDescription) {
     metaDesc.setAttribute('content', cfg.metaDescription);
   }
-}
-
-function getNested(obj, path) {
-  return path.split('.').reduce((o, p) => (o ? o[p] : undefined), obj);
 }
 
 function renderRepairs(repairs) {
@@ -95,32 +136,32 @@ function showRepairModal(repair) {
       <div class="repair-modal-date">${formatDate(repair.date)} &middot; ${repair.deviceModel}</div>
       <h2 class="repair-modal-title">${repair.title}</h2>
       <div class="repair-modal-section">
-        <h4>Issue</h4>
+        <h4>${langData['repair.modalIssue'] || 'Issue'}</h4>
         <p>${repair.issue}</p>
       </div>
       <div class="repair-modal-section">
-        <h4>Problem</h4>
+        <h4>${langData['repair.modalProblem'] || 'Problem'}</h4>
         <p>${repair.problem}</p>
       </div>
       <div class="repair-modal-section">
-        <h4>Diagnosis & Process</h4>
+        <h4>${langData['repair.modalProcess'] || 'Diagnosis & Process'}</h4>
         <p>${repair.process}</p>
       </div>
       ${partsList ? `
         <div class="repair-modal-section">
-          <h4>Parts Used</h4>
+          <h4>${langData['repair.modalParts'] || 'Parts Used'}</h4>
           <ul>${partsList}</ul>
         </div>
       ` : ''}
       ${repair.reviewAuthor ? `
         <div class="repair-review-box">
-          <h4>Customer Review</h4>
+          <h4>${langData['repair.modalReview'] || 'Customer Review'}</h4>
           ${stars ? `<div class="review-stars">${stars}</div>` : ''}
           <p class="review-text">"${repair.reviewText}"</p>
           <p class="review-author">— ${repair.reviewAuthor}</p>
         </div>
       ` : ''}
-      <button class="modal-close-bottom" id="repairModalClose">Close</button>
+      <button class="modal-close-bottom" id="repairModalClose">${langData['repair.modalClose'] || 'Close'}</button>
     </div>
   `;
 
@@ -147,7 +188,8 @@ function handleRepairEsc(e) {
 function renderReviews(reviews) {
   if (!reviewsGrid) return;
   if (!reviews.length) {
-    reviewsGrid.innerHTML = '<p style="text-align:center;color:var(--clr-text-light);grid-column:1/-1">No reviews yet. Be the first to leave one!</p>';
+    const emptyMsg = langData['reviews.empty'] || 'No reviews yet. Be the first to leave one!';
+    reviewsGrid.innerHTML = `<p style="text-align:center;color:var(--clr-text-light);grid-column:1/-1">${emptyMsg}</p>`;
     return;
   }
   reviewsGrid.innerHTML = reviews.map(r => {
@@ -178,6 +220,14 @@ async function loadReviews() {
     renderReviews(allReviews);
   } catch {}
 }
+
+langBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (btn.dataset.lang && btn.dataset.lang !== currentLang) {
+      loadLang(btn.dataset.lang);
+    }
+  });
+});
 
 navToggle.addEventListener('click', () => {
   const open = navList.classList.toggle('open');
@@ -212,11 +262,11 @@ document.getElementById('contactForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const btn = e.target.querySelector('.btn');
   const msg = document.getElementById('contactMsg');
-  msg.textContent = 'Sending...';
+  msg.textContent = langData['contact.sending'] || 'Sending...';
   msg.className = 'form-msg';
   btn.disabled = true;
   await new Promise(r => setTimeout(r, 1000));
-  msg.textContent = 'Thanks! I\'ll get back to you soon.';
+  msg.textContent = langData['contact.sent'] || 'Thanks! I\'ll get back to you soon.';
   msg.className = 'form-msg';
   btn.disabled = false;
   e.target.reset();
@@ -274,12 +324,12 @@ document.getElementById('reviewForm').addEventListener('submit', async (e) => {
   const text = document.getElementById('reviewText').value.trim();
 
   if (!selectedRating) {
-    msg.textContent = 'Please select a rating.';
+    msg.textContent = langData['review.errorRating'] || 'Please select a rating.';
     msg.className = 'form-msg error';
     return;
   }
 
-  msg.textContent = 'Submitting...';
+  msg.textContent = langData['review.submitting'] || 'Submitting...';
   msg.className = 'form-msg';
 
   const review = {
@@ -299,7 +349,7 @@ document.getElementById('reviewForm').addEventListener('submit', async (e) => {
 
     const validDevice = devices.find(d => d.serial === serial);
     if (!validDevice) {
-      msg.textContent = 'Serial number not found. Make sure it matches the serial from your repair service.';
+      msg.textContent = langData['review.errorSerial'] || 'Serial number not found. Make sure it matches the serial from your repair service.';
       msg.className = 'form-msg error';
       return;
     }
@@ -313,8 +363,8 @@ document.getElementById('reviewForm').addEventListener('submit', async (e) => {
     if (ghToken && ghOwner && ghRepo) {
       await ghWriteFile('reviews/reviews.json', content, ghToken, ghOwner, ghRepo);
     } else {
-      console.log('Review submitted (requires admin token for GitHub write):', review);
-      msg.textContent = 'Review submitted for approval! It will appear once approved.';
+      const successMsg = langData['review.success'] || 'Review submitted for approval! It will appear once approved.';
+      msg.textContent = successMsg;
       msg.className = 'form-msg success';
       document.getElementById('reviewForm').reset();
       selectedRating = 0;
@@ -323,14 +373,15 @@ document.getElementById('reviewForm').addEventListener('submit', async (e) => {
       return;
     }
 
-    msg.textContent = 'Review submitted for approval! It will appear once approved.';
+    const successMsg = langData['review.success'] || 'Review submitted for approval! It will appear once approved.';
+    msg.textContent = successMsg;
     msg.className = 'form-msg success';
     document.getElementById('reviewForm').reset();
     selectedRating = 0;
     starInput.querySelectorAll('i').forEach(s => { s.className = 'far fa-star'; s.classList.remove('active'); });
     setTimeout(closeReviewModal, 1500);
   } catch (err) {
-    msg.textContent = 'Error submitting review. Please try again.';
+    msg.textContent = langData['review.errorSubmit'] || 'Error submitting review. Please try again.';
     msg.className = 'form-msg error';
   }
 });

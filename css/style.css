@@ -146,7 +146,38 @@ ul { list-style: none; }
 }
 .logo:hover { color: var(--clr-primary); text-shadow: 0 0 20px rgba(0, 212, 255, 0.4); }
 
-.nav-list { display: flex; gap: 32px; align-items: center; }
+.nav-list { display: flex; gap: 24px; align-items: center; }
+
+.lang-switcher {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  padding-left: 16px;
+  border-left: 1px solid var(--clr-border);
+}
+.lang-btn {
+  background: none;
+  border: none;
+  color: var(--clr-text-light);
+  font-family: var(--ff-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  letter-spacing: 0.5px;
+}
+.lang-btn:hover { color: var(--clr-white); }
+.lang-btn.active {
+  color: var(--clr-primary);
+  background: var(--clr-primary-dim);
+}
+.lang-sep {
+  color: var(--clr-border-light);
+  font-size: 0.65rem;
+}
 .nav-link {
   font-size: var(--fs-tiny);
   font-weight: 500;
