@@ -111,7 +111,7 @@ loginForm.addEventListener('submit', async (e) => {
   if (!email || !password || !token || !owner || !repo) { loginError.textContent = 'Please fill in all fields.'; return; }
   loginError.textContent = 'Signing in...';
   try {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await sbAuth.signInWithPassword({ email, password });
     if (error) throw error;
     localStorage.setItem('adminToken', token);
     localStorage.setItem('adminOwner', owner);
@@ -259,7 +259,7 @@ async function deleteRepair(id) {
 }
 
 logoutBtn.addEventListener('click', async () => {
-  await supabase.auth.signOut().catch(() => {});
+  await sbAuth.signOut().catch(() => {});
   localStorage.removeItem('adminToken');
   localStorage.removeItem('adminOwner');
   localStorage.removeItem('adminRepo');
@@ -339,7 +339,7 @@ async function loadDevicesDashboard() {
   devicesTable.style.display = 'none';
   devicesEmpty.style.display = 'none';
   try {
-    const { data, error } = await supabase.from('devices').select('*').order('date_added', { ascending: false });
+    const { data, error } = await sbSelect('devices', { order: 'date_added', dir: 'desc' });
     if (error) throw error;
     allDevices = data || [];
   } catch { allDevices = []; }
@@ -388,7 +388,7 @@ async function editDevice(serial) {
 async function deleteDevice(serial) {
   if (!confirm(`Delete device with serial "${serial}"?`)) return;
   try {
-    const { error } = await supabase.from('devices').delete().eq('serial', serial);
+    const { error } = await sbDelete('devices', 'serial', serial);
     if (error) throw error;
     allDevices = allDevices.filter(d => d.serial !== serial);
     renderDevicesDashboard();
@@ -426,7 +426,7 @@ deviceEditorForm.addEventListener('submit', async (e) => {
   };
 
   try {
-    const { error } = await supabase.from('devices').upsert(device, { onConflict: 'serial' });
+    const { error } = await sbUpsert('devices', device, 'serial');
     if (error) throw error;
     edDeviceMsg.textContent = 'Device saved! Redirecting...'; edDeviceMsg.className = 'form-msg success';
     setTimeout(() => { showView(viewDashboard); switchTab('devices'); }, 800);
@@ -442,7 +442,7 @@ async function loadReviewsDashboard() {
   approvedReviews.innerHTML = '';
   reviewsEmpty.style.display = 'none';
   try {
-    const { data, error } = await supabase.from('reviews').select('*').order('date', { ascending: false });
+    const { data, error } = await sbSelect('reviews', { order: 'date', dir: 'desc' });
     if (error) throw error;
     allReviews = data || [];
   } catch { allReviews = []; }
@@ -499,7 +499,7 @@ document.addEventListener('click', (e) => {
 
 async function approveReview(id) {
   try {
-    const { error } = await supabase.from('reviews').update({ approved: true }).eq('id', id);
+    const { error } = await sbUpdate('reviews', 'id', id, { approved: true });
     if (error) throw error;
     const review = allReviews.find(r => r.id === id);
     if (review) review.approved = true;
@@ -510,7 +510,7 @@ async function approveReview(id) {
 async function rejectReview(id) {
   if (!confirm('Remove this review?')) return;
   try {
-    const { error } = await supabase.from('reviews').delete().eq('id', id);
+    const { error } = await sbDelete('reviews', 'id', id);
     if (error) throw error;
     allReviews = allReviews.filter(r => r.id !== id);
     renderReviewsDashboard();
@@ -636,7 +636,7 @@ passwordForm.addEventListener('submit', async (e) => {
   if (newPw.length < 6) { pwMsg.textContent = 'Password must be at least 6 characters.'; pwMsg.className = 'form-msg error'; pwSaveBtn.disabled = false; return; }
   if (newPw !== confirm) { pwMsg.textContent = 'Passwords do not match.'; pwMsg.className = 'form-msg error'; pwSaveBtn.disabled = false; return; }
   try {
-    const { error } = await supabase.auth.updateUser({ password: newPw });
+    const { error } = await sbAuth.updateUser({ password: newPw });
     if (error) throw error;
     pwMsg.textContent = 'Password updated!'; pwMsg.className = 'form-msg success';
     passwordForm.reset();
@@ -647,7 +647,7 @@ passwordForm.addEventListener('submit', async (e) => {
 document.getElementById('sessionLogoutBtn').addEventListener('click', async () => {
   if (!confirm('Sign out of all active sessions?')) return;
   try {
-    const { error } = await supabase.auth.signOut({ scope: 'global' });
+    const { error } = await sbAuth.signOut();
     if (error) throw error;
     document.getElementById('sessionMsg').textContent = 'Signed out globally. Redirecting...';
     document.getElementById('sessionMsg').className = 'form-msg success';
@@ -661,22 +661,11 @@ document.getElementById('sessionLogoutBtn').addEventListener('click', async () =
   }
 });
 
-(function init() {
-  const savedToken = localStorage.getItem('adminToken');
-  const savedOwner = localStorage.getItem('adminOwner');
-  const savedRepo = localStorage.getItem('adminRepo');
-  if (savedToken && savedOwner && savedRepo) {
-    token = savedToken; owner = savedOwner; repo = savedRepo;
-    document.getElementById('loginToken').value = savedToken;
-    document.getElementById('loginOwner').value = savedOwner;
-    document.getElementById('loginRepo').value = savedRepo;
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) showDashboard();
-      else {
-        localStorage.removeItem('adminToken');
-        localStorage.removeItem('adminOwner');
-        localStorage.removeItem('adminRepo');
-      }
-    });
+sbAuth.getSession().then(({ data: { session } }) => {
+  if (session) {
+    const savedToken = localStorage.getItem('adminToken');
+    const savedOwner = localStorage.getItem('adminOwner');
+    const savedRepo = localStorage.getItem('adminRepo');
+    if (savedToken && savedOwner && savedRepo) { token = savedToken; owner = savedOwner; repo = savedRepo; showDashboard(); }
   }
-})();
+});

@@ -234,7 +234,7 @@ async function loadRepairs() {
 
 async function loadReviews() {
   try {
-    const { data, error } = await supabase.from('reviews').select('*').eq('approved', true).order('date', { ascending: false });
+    const { data, error } = await sbSelect('reviews', { approved: true, order: 'date', dir: 'desc' });
     if (error) throw error;
     allReviews = data || [];
     renderReviews(allReviews);
@@ -361,7 +361,7 @@ document.getElementById('reviewForm').addEventListener('submit', async (e) => {
   };
 
   try {
-    const { data: exists, error: rpcError } = await supabase.rpc('check_serial_exists', { p_serial: serial });
+    const { data: exists, error: rpcError } = await sbRpc('check_serial_exists', { p_serial: serial });
     if (rpcError) throw rpcError;
     if (!exists) {
       msg.textContent = langData['review.errorSerial'] || 'Serial number not found. Make sure it matches the serial from your repair service.';
@@ -369,7 +369,7 @@ document.getElementById('reviewForm').addEventListener('submit', async (e) => {
       return;
     }
 
-    const { error: insertError } = await supabase.from('reviews').insert(review);
+    const { error: insertError } = await sbInsert('reviews', review);
     if (insertError) throw insertError;
 
     const successMsg = langData['review.success'] || 'Review submitted for approval! It will appear once approved.';
