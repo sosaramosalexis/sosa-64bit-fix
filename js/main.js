@@ -426,6 +426,8 @@ async function ghWriteFile(path, content, token, owner, repo) {
   if (!res.ok) throw new Error('GitHub write failed');
 }
 
+setTimeout(() => document.body.classList.add('config-ready'), 5000);
+
 Promise.all([
   loadConfig().catch(() => {}),
   loadRepairs().catch(() => {}),
