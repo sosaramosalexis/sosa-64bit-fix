@@ -151,32 +151,26 @@ ul { list-style: none; }
 .lang-switcher {
   display: flex;
   align-items: center;
-  gap: 4px;
   margin-left: 8px;
   padding-left: 16px;
   border-left: 1px solid var(--clr-border);
 }
-.lang-btn {
-  background: none;
-  border: none;
-  color: var(--clr-text-light);
+#langToggle {
+  background: var(--clr-primary-dim);
+  border: 1px solid var(--clr-primary);
+  color: var(--clr-primary);
   font-family: var(--ff-mono);
   font-size: 0.7rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  padding: 2px 6px;
+  padding: 3px 10px;
   border-radius: 4px;
   transition: all 0.2s;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
 }
-.lang-btn:hover { color: var(--clr-white); }
-.lang-btn.active {
-  color: var(--clr-primary);
-  background: var(--clr-primary-dim);
-}
-.lang-sep {
-  color: var(--clr-border-light);
-  font-size: 0.65rem;
+#langToggle:hover {
+  background: var(--clr-primary);
+  color: var(--clr-bg);
 }
 .nav-link {
   font-size: var(--fs-tiny);

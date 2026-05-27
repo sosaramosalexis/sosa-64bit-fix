@@ -12,7 +12,7 @@ const reviewModal = document.getElementById('reviewModal');
 const navToggle = document.getElementById('navToggle');
 const navList = document.querySelector('.nav-list');
 const navLinks = document.querySelectorAll('.nav-link:not(.lang-btn)');
-const langBtns = document.querySelectorAll('.lang-btn');
+const langToggle = document.getElementById('langToggle');
 
 function formatDate(dateStr) {
   const locale = currentLang === 'es' ? 'es-ES' : 'en-US';
@@ -34,7 +34,8 @@ async function loadLang(lang) {
     document.documentElement.dataset.lang = lang;
     applyLang();
     localStorage.setItem('siteLang', lang);
-    langBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.lang === lang));
+    langToggle.dataset.lang = lang;
+    langToggle.textContent = lang === 'en' ? 'EN' : 'ES';
     if (siteConfig.siteName) {
       document.title = `${siteConfig.siteName} — ${lang === 'es' ? 'Reparación de Computadoras' : 'Computer Repair'}`;
     }
@@ -221,12 +222,9 @@ async function loadReviews() {
   } catch {}
 }
 
-langBtns.forEach(btn => {
-  btn.addEventListener('click', () => {
-    if (btn.dataset.lang && btn.dataset.lang !== currentLang) {
-      loadLang(btn.dataset.lang);
-    }
-  });
+langToggle.addEventListener('click', () => {
+  const next = currentLang === 'en' ? 'es' : 'en';
+  loadLang(next);
 });
 
 navToggle.addEventListener('click', () => {
