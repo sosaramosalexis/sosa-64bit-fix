@@ -1,4 +1,4 @@
-const FALLBACK_HASH = 'b9bdfb380fbfe39c592804dee2ef71d3e949d10d34b8e3267729616d02108efd';
+const FALLBACK_HASH = '021760d0961ff6a8a7335dfbd7f07589554f5c1bf63f2369fc5f03321ac77af4';
 
 let token = '';
 let owner = '';
