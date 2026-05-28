@@ -105,7 +105,7 @@ function sbRpc(fn, params) {
 }
 
 function sbMfaEnroll() {
-  return sbFetch('POST', 'auth/v1/mfa/totp/enroll')
+  return sbFetch('POST', 'auth/v1/mfa/totp/enroll', {})
     .then(d => ({ data: d, error: null })).catch(err => ({ data: null, error: err }));
 }
 
