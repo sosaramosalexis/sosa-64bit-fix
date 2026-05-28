@@ -646,7 +646,8 @@ const SETTINGS_FIELDS = [
   'reviews-title', 'reviews-subtitle',
   'about-title', 'about-paragraph1', 'about-paragraph2', 'about-detail1', 'about-detail2', 'about-detail3', 'about-image',
   'contact-title', 'contact-subtitle', 'contact-address', 'contact-email', 'contact-hours',
-  'footer-tagline'
+  'footer-tagline',
+  'footer-copyright'
 ];
 
 async function loadSettings() {
