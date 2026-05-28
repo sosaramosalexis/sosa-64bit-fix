@@ -1,3 +1,6 @@
 # Data now lives in Supabase (not committed to repo)
 devices/devices.json
 reviews/reviews.json
+
+# Auth is now Supabase-based — password hash file is obsolete
+admin-config.json
