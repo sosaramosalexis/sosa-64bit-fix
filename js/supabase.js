@@ -55,7 +55,13 @@ const sbAuth = {
 
   updateUser: (updates) =>
     sbFetch('PUT', 'auth/v1/user', updates)
-      .then(data => ({ data, error: null }))
+      .then(data => {
+        try {
+          const s = JSON.parse(localStorage.getItem('sb-session'));
+          if (s) { s.user = data; localStorage.setItem('sb-session', JSON.stringify(s)); }
+        } catch {}
+        return { data, error: null };
+      })
       .catch(err => ({ data: null, error: err }))
 };
 
