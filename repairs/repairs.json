@@ -1,16 +1,5 @@
 [
   {
-    "id": "example-repair",
-    "title": "Dead Motherboard Revival",
-    "deviceType": "Laptop",
-    "deviceModel": "Dell XPS 15 9570",
-    "issue": "Dead motherboard - no power",
-    "status": "Completed",
-    "date": "2026-05-15",
-    "image": "https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?w=600&q=80",
-    "excerpt": "Brought a Dell XPS 15 back from the dead with a full motherboard repair and power IC replacement."
-  },
-  {
     "id": "example-repair-2",
     "title": "SSD Upgrade & System Tune",
     "deviceType": "Desktop",
