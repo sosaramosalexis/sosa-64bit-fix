@@ -3,7 +3,7 @@
   <!-- Replace src with your 784×1168 logo image (displayed at 90px wide) -->
 </p>
 
-[![GitHub](https://img.shields.io/badge/GitHub-sosaramosalexis/sosa-64bit-fix-181717?logo=github)](https://github.com/sosaramosalexis/sosa-64bit-fix)
+[![GitHub](https://img.shields.io/static/v1?label=GitHub&message=sosaramosalexis%2Fsosa-64bit-fix&color=181717&logo=github)](https://github.com/sosaramosalexis/sosa-64bit-fix)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![JavaScript](https://img.shields.io/badge/javascript-F7DF1E?logo=javascript)]()
 [![Platform](https://img.shields.io/badge/platform-Web-blue)]()
